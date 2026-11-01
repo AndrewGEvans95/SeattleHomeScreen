@@ -1,0 +1,37 @@
+<div id="seattle-weather-eink">
+  
+  <div class="preview-controls">
+    <label class="field-label" data-demo-control>Weather example<select data-scenario><option value="showers">Passing shower</option><option value="clear">Clear morning</option><option value="wind">Windy waterfront</option><option value="stale">Forecast unavailable</option></select></label>
+    <label class="field-label">Rain preference<select data-preference><option value="dry">Keep me dry</option><option value="drizzle">Light drizzle is okay</option></select></label>
+    <details class="ride-settings"><summary>Ride timing &amp; preferences</summary><div class="settings-grid">
+      <label class="field-label">Home → Fremont · min<input type="number" min="1" max="30" step="1" value="9" data-home-minutes></label>
+      <label class="field-label">Fremont → SLU · min<input type="number" min="1" max="40" step="1" value="13" data-slu-minutes></label>
+      <label class="field-label">Gust comfort limit · mph<input type="number" min="1" max="50" step="1" value="25" data-gust-limit></label>
+      <label class="field-label">Arrive at SLU by · optional<input type="time" data-arrive-by aria-label="Optional arrival deadline today in Seattle"></label>
+    </div><div class="settings-help">Timing includes a 3-minute arrival allowance. Clear the arrival time for a flexible ride.</div><div data-setting-error role="alert"></div></details>
+    <div class="departure-control"><div class="departure-label"><label for="ride-route-departure">Ride shown · leave <output data-departure-time>8:25 AM</output></label><button type="button" data-use-suggestion hidden>Use suggested time</button><span class="clock-note" data-clock-note>Suggested · example morning</span></div><input id="ride-route-departure" class="departure-range" data-departure type="range" min="0" max="45" step="5" value="15" aria-label="Departure time for the ride shown"></div>
+  </div>
+  <div class="preview-stage viz-dotted-background">
+    <div class="display">
+      <div class="eyebrow"><span>HOME / FREMONT / SLU</span><span class="demo">WEATHER DEMO</span></div>
+      <div class="decision-label" data-decision-label>APPROXIMATE DEPARTURE WINDOW</div>
+      <div class="headline" data-headline>Bike 8:25–8:45.</div>
+      <div class="reason" data-reason>Rain near Fremont if you leave now. A later departure looks drier.</div>
+      <div class="journey-meta"><strong data-journey>Shown ride · 8:25 → about 8:47</strong><span data-ride-duration>22 min ride estimate</span></div>
+      <div class="forecast-context"><span>FORECAST WHEN YOU PASS</span><span data-grid-note>15-minute model periods</span></div>
+      <svg class="weather-map" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Weather at home, Fremont, and South Lake Union at the times you ride through"></svg>
+      <div class="rain-heading"><span class="section-label">RAIN WINDOW</span><span class="rain-key"><span><i class="key-drizzle" aria-hidden="true"></i>Drizzle</span><span><i class="key-rain" aria-hidden="true"></i>Rain</span><span data-shown-ride-key><i class="key-ride" aria-hidden="true"></i>Shown ride</span><span><i class="key-now" aria-hidden="true"></i><span data-leave-now-label>Leave now · 8:10</span></span></span></div>
+      <svg class="rain-timeline" role="img" aria-label="Rain timing for the three neighborhoods"></svg>
+      <div class="timing-note"><span data-timeline-note>Dotted line: leave now</span><span data-arrival-note>Passage allowance ±3 min</span></div>
+      <div class="alternative"><div class="bus"><span class="route-number">62</span><div><div class="bus-name">Downtown via Fremont</div><div class="bus-note" data-bus-note>Next from home · 12 min · example</div></div></div><div class="surface-note">Road wetness<br>not measured</div></div>
+      <div class="source-note" data-source-note>DEMO · simulated weather · three forecast checkpoints</div>
+    </div>
+  </div>
+  
+  
+  <div class="accessible" aria-live="polite" data-announcement></div>
+  
+  
+  
+  
+</div>

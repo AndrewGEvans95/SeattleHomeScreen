@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Seattle Window</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/transit.css">
+  <link rel="stylesheet" href="/weather.css">
+  <link rel="stylesheet" href="/app.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="app-bar">
+    <div class="brand">Seattle Window <span>45th &amp; Woodlawn</span></div>
+    <nav aria-label="Display"><button data-view="transit" aria-pressed="true">Bus &amp; city</button><button data-view="weather" aria-pressed="false">Weather &amp; bike</button></nav>
+    <label>Data <select id="data-mode"><option value="demo">Demo</option><option value="live">Live</option></select></label>
+    <button id="fullscreen">Full screen</button>
+    <a id="download" href="/api/frame.png?view=transit&mode=demo" download="seattle-window.png">Export E1003 PNG</a>
+  </header>
+  <aside id="connection" role="status" aria-live="polite">Loading the display…</aside>
+  <main>
+    <section id="transit-panel" aria-label="Transit display"></section>
+    <section id="weather-panel" aria-label="Cycling weather display" hidden></section>
+  </main>
+  <button id="exit-kiosk" hidden>Exit full screen</button>
+  <footer class="app-footer">Map geometry: Seattle SDOT · King County · USGS 3DEP. Route and ride times are illustrative; check current signs and conditions.</footer>
+</body>
+</html>

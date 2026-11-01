@@ -1,0 +1,35 @@
+<div id="seattle-transit-eink" class="viz-dotted-background">
+  
+  <div class="preview-controls">
+    <label class="form-label">View<select class="form-select" data-view><option value="auto">Adaptive</option><option value="0">Block</option><option value="1">Area</option><option value="2">Fremont</option><option value="3">City</option></select></label>
+<label class="form-label" data-demo-control>Vehicle<select class="form-select" data-vehicle-kind><option value="articulated">Articulated</option><option value="standard">Standard</option><option value="unknown">Unknown</option></select></label>
+    <div class="levels" data-demo-control><button type="button" class="btn" data-play aria-pressed="false">Play approach</button><button type="button" class="btn" data-step>+1 min</button></div>
+    <details class="preview-options"><summary class="text-small cursor-interaction">Timing &amp; feed</summary><div class="viz-controls">
+      <label class="form-label">Time to reach the stop<select class="form-select" data-allowance><option value="1">1 minute</option><option value="2" selected>2 minutes</option><option value="3">3 minutes</option><option value="4">4 minutes</option><option value="5">5 minutes</option></select></label>
+      <label class="form-label">Hold the block view at<select class="form-select" data-close-at><option value="1">1 minute away</option><option value="2">2 minutes away</option><option value="3" selected>3 minutes away</option></select></label>
+      <label class="form-check" data-demo-control><input type="checkbox" class="form-check-input" data-stale><span class="form-check-label">Simulate feed loss</span></label>
+    </div></details>
+  </div>
+  <div class="display">
+    <div class="eyebrow"><span>45TH &amp; WOODLAWN</span><span>YOUR NEXT BUS</span></div>
+    <div class="arrival">
+      <div class="route-heading"><span class="route-number">62</span><div><div class="destination">Downtown</div><div class="via">via Fremont</div></div></div>
+      <div class="countdown"><div class="minutes"><span data-eta>12</span><span class="unit" data-eta-unit>min</span></div><div class="following" data-following>then 25 min</div></div>
+    </div>
+    <div class="vehicle-profile" data-vehicle-profile><svg data-vehicle-glyph viewBox="-33 -12 66 26" aria-hidden="true"></svg><span data-vehicle-label>Articulated bus</span><span class="accessible" data-vehicle-basis>Example vehicle</span></div>
+    <div class="departure" data-departure data-state="wait"><span class="departure-main" data-leave>Head down in 10 min</span><span class="departure-context" data-allowance-note>2 min to reach the stop</span></div>
+    <svg class="map" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-labelledby="little-city-title little-city-description"></svg>
+    <div class="view-caption"><span class="view-name" data-view-name>Your block</span><span class="scale-group"><span class="scale-rule" data-scale-rule></span><span data-scale-label>50 m</span></span></div>
+    <div class="other-routes">
+      <div><div class="route-line"><span class="route-tag">44</span><span class="secondary-name">Upper Fremont</span><span class="secondary-time"><span data-eta44>15</span> <span class="secondary-unit">min</span></span></div><div class="boarding">Same stop · toward Ballard</div></div>
+      <div data-extra-routes><div class="fremont-options"><span class="secondary-name">Fremont</span><span class="fremont-times"><span><strong>31</strong> · <span data-eta31>16</span> min</span><span><strong>32</strong> · <span data-eta32>20</span> min</span></span></div><div class="boarding">Separate boarding location · verify stop</div></div>
+    </div>
+    <div class="feed-note"><span class="source-note" data-source-note>DEMO · simulated arrivals &amp; vehicles</span><span data-feed></span><span data-focus></span></div>
+    <div class="attribution">Transit scheduling, geographic, and real-time data provided by permission of King County</div>
+  </div>
+  
+  <div class="accessible" aria-live="polite" data-announcement></div>
+  
+  
+  
+</div>

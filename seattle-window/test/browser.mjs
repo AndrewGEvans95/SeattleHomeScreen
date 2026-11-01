@@ -1,0 +1,48 @@
+// Optional real-browser integration test; run after npm run install:renderer.
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright';
+import {createServer} from '../src/server.mjs';
+import {closeRenderer} from '../src/renderer.mjs';
+const config={PORT:'8787',CHROMIUM_EXECUTABLE:process.env.CHROMIUM_EXECUTABLE};
+const server=createServer({config,feeds:{transit:async()=>({status:'unconfigured',arrivals:[]}),weather:async()=>({status:'unavailable'}),vehicles:async()=>({status:'ok',fetchedAt:Date.now(),vehicles:[{route:'62',tripId:'1_sample',vehicleId:'1_8012',type:{kind:'articulated'},location:{lat:47.6617,lon:-122.335,updatedAt:Date.now()}}]})}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));config.PORT=String(server.address().port);
+const base='http://127.0.0.1:'+config.PORT;
+let browser;
+try{
+  browser=await chromium.launch({headless:true,...(config.CHROMIUM_EXECUTABLE?{executablePath:config.CHROMIUM_EXECUTABLE}:{})});
+  const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(base+'/?mode=demo');await page.waitForFunction(()=>window.frameReady);
+  assert.equal(await page.locator('[data-eta]').textContent(),'12');
+  await page.locator('[data-vehicle-kind]').selectOption('standard');assert.match(await page.locator('[data-vehicle-label]').textContent(),/Standard/);
+  await page.locator('[data-vehicle-kind]').selectOption('unknown');assert.match(await page.locator('[data-vehicle-label]').textContent(),/unavailable/);
+  await page.locator('[data-step]').click();assert.equal(await page.locator('[data-eta]').textContent(),'11');
+  await page.locator('nav [data-view=weather]').click();assert(await page.locator('#weather-panel').isVisible());
+  assert.equal(await page.locator('[data-headline]').textContent(),'Bike 8:25–8:45.');
+  await page.locator('.ride-settings summary').click();
+  await page.locator('[data-slu-minutes]').fill('18');await page.locator('[data-slu-minutes]').press('Tab');
+  await page.locator('[data-arrive-by]').fill('08:50');await page.locator('[data-arrive-by]').press('Tab');
+  assert.equal(await page.locator('[data-headline]').textContent(),'Check the 62.');
+  const exportURL=new URL(await page.locator('#download').getAttribute('href'),base);
+  assert.equal(exportURL.searchParams.get('wxSlu'),'18');assert.equal(exportURL.searchParams.get('wxArrive'),'08:50');
+  const frame=await browser.newPage({viewport:{width:720,height:960}});
+  const frameQuery=new URLSearchParams(exportURL.searchParams);frameQuery.set('frame','1');
+  await frame.goto(base+'/?'+frameQuery);await frame.waitForFunction(()=>window.frameReady);
+  assert.equal(await frame.locator('[data-headline]').textContent(),'Check the 62.');
+  assert.equal(await frame.locator('[data-ride-duration]').textContent(),'27 min ride estimate');
+  const footer=await frame.locator('#seattle-weather-eink .source-note').boundingBox();assert(footer.y+footer.height<=960);
+  const weatherPNG=await fetch(exportURL).then(async r=>{assert.equal(r.status,200);return Buffer.from(await r.arrayBuffer());});
+  const defaultPNG=await fetch(base+'/api/frame.png?view=weather&mode=demo').then(async r=>{assert.equal(r.status,200);return Buffer.from(await r.arrayBuffer());});
+  assert.equal(weatherPNG.readUInt32BE(16),1404);assert.equal(weatherPNG.readUInt32BE(20),1872);
+  assert(!weatherPNG.equals(defaultPNG),'Different weather settings must not reuse the same cached image');
+  await frame.close();
+  await page.reload();await page.waitForFunction(()=>window.frameReady);
+  assert.equal(await page.locator('[data-slu-minutes]').inputValue(),'18');
+  await page.locator('.ride-settings summary').click();await page.locator('[data-arrive-by]').fill('');await page.locator('[data-arrive-by]').press('Tab');
+  await page.locator('#data-mode').selectOption('live');await page.waitForFunction(()=>document.querySelector('[data-headline]').textContent==='Waiting for weather.');
+  assert.equal(await page.locator('[data-eta]').textContent(),'—');await page.waitForFunction(()=>document.querySelector('.map [data-bus-type=articulated]'));
+  assert.match(await page.locator('#connection').textContent(),/Metro GPS connected/);
+  for(const width of [360,1280]){await page.setViewportSize({width,height:1000});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
+  const png=await fetch(base+'/api/frame.png?view=transit&mode=demo').then(async r=>{assert.equal(r.status,200);return Buffer.from(await r.arrayBuffer());});
+  assert.equal(png.readUInt32BE(16),1404);assert.equal(png.readUInt32BE(20),1872);assert.deepEqual(errors,[]);
+  console.log('Browser controls, commute settings, deadline, persistence, export consistency, narrow layout and native PNG export passed.');
+}finally{await browser?.close();await closeRenderer();await new Promise(r=>server.close(r));}

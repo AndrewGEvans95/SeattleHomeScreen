@@ -1,0 +1,88 @@
+
+    #seattle-transit-eink { padding: 12px 8px; }
+    #seattle-transit-eink .preview-controls { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 10px; max-width: 720px; margin: 0 auto 12px; }
+    #seattle-transit-eink .preview-options { width: 100%; }
+    #seattle-transit-eink .preview-options > div { margin-top: 10px; }
+    #seattle-transit-eink .levels { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+    #seattle-transit-eink .display {
+      --paper: light-dark(#ffffff, #111111); --ink: light-dark(#111111, #eeeeee);
+      --muted-ink: light-dark(#444444, #cccccc); --rule: light-dark(#bbbbbb, #777777);
+      --ground: light-dark(#eeeeee, #222222); --street: light-dark(#ffffff, #333333);
+      --curb: light-dark(#aaaaaa, #777777); --roof: light-dark(#eeeeee, #444444);
+      --wall: light-dark(#dddddd, #333333); --wall-shade: light-dark(#bbbbbb, #222222);
+      --building-line: light-dark(#666666, #999999); --home-face: light-dark(#444444, #bbbbbb);
+      --secondary-route: light-dark(#666666, #bbbbbb); --dot: light-dark(#777777, #aaaaaa);
+      --road-line: light-dark(#999999, #888888); --water: light-dark(#ffffff, #111111);
+      box-sizing: border-box; width: 100%; max-width: 720px; margin: auto; padding: 24px 26px 16px;
+      background: var(--paper); color: var(--ink); border: 1px solid var(--rule); border-radius: 3px;
+      font: 400 14px/1.35 "Helvetica Neue", Arial, sans-serif;
+    }
+    #seattle-transit-eink .eyebrow { display: flex; align-items: center; justify-content: space-between; gap: 8px 15px; flex-wrap: wrap; font-size: 12px; letter-spacing: .12em; color: var(--muted-ink); }
+    #seattle-transit-eink .arrival { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+    #seattle-transit-eink .route-heading { display: flex; align-items: center; gap: 14px; }
+    #seattle-transit-eink .route-number { display: grid; place-items: center; width: 54px; height: 56px; flex: 0 0 auto; border-radius: 8px; background: var(--ink); color: var(--paper); font-size: 31px; font-weight: 500; letter-spacing: -.06em; }
+    #seattle-transit-eink .destination { font-size: 27px; font-weight: 500; letter-spacing: -.045em; }
+    #seattle-transit-eink .via { margin-top: 2px; font-size: 13px; color: var(--muted-ink); }
+    #seattle-transit-eink .countdown { white-space: nowrap; text-align: right; }
+    #seattle-transit-eink .minutes { font-size: 65px; font-weight: 400; line-height: .95; letter-spacing: -.075em; font-variant-numeric: tabular-nums; }
+    #seattle-transit-eink .unit { font-size: 17px; letter-spacing: 0; margin-left: 4px; }
+    #seattle-transit-eink .following { margin-top: 6px; color: var(--muted-ink); font-size: 12px; }
+    #seattle-transit-eink .departure { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px 14px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 18px; padding: 10px 0; }
+    #seattle-transit-eink .departure-main { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+    #seattle-transit-eink .departure-context { font-size: 12px; color: var(--muted-ink); }
+    #seattle-transit-eink .departure[data-state="go"] .departure-main { background: var(--ink); color: var(--paper); padding: 3px 8px; border-radius: 2px; }
+    #seattle-transit-eink .feed-note { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; color: var(--muted-ink); font-size: 12px; }
+    #seattle-transit-eink .map { width: 100%; display: block; margin-top: 12px; overflow: hidden; }
+    #seattle-transit-eink .map text { font-family: "Helvetica Neue", Arial, sans-serif; fill: var(--ink); }
+    #seattle-transit-eink .map-label { font-size: 13px; font-weight: 500; paint-order: stroke; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; }
+    #seattle-transit-eink .map-label.large { font-size: 16px; }
+    #seattle-transit-eink .map-label.quiet { fill: var(--muted-ink); font-size: 12px; font-weight: 400; }
+    #seattle-transit-eink .bus-number { font-size: 14px; font-weight: 500; text-anchor: middle; dominant-baseline: central; }
+    #seattle-transit-eink .view-caption { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding-bottom: 14px; font-size: 12px; color: var(--muted-ink); }
+    #seattle-transit-eink .view-name { font-weight: 500; font-size: 12px; color: var(--ink); }
+    #seattle-transit-eink .scale-group { display: flex; align-items: center; gap: 9px; white-space: nowrap; }
+    #seattle-transit-eink .scale-rule { width: 36px; height: 5px; border: solid var(--muted-ink); border-width: 0 1px 1px; box-sizing: border-box; }
+    #seattle-transit-eink .other-routes { border-top: 1px solid var(--rule); padding-top: 13px; display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+    #seattle-transit-eink .route-line { display: flex; align-items: baseline; gap: 10px; }
+    #seattle-transit-eink .route-tag { font-size: 16px; font-weight: 500; min-width: 25px; }
+    #seattle-transit-eink .secondary-name { font-size: 14px; flex: 1; }
+    #seattle-transit-eink .secondary-time { font-size: 18px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #seattle-transit-eink .secondary-unit { font-size: 12px; color: var(--muted-ink); }
+    #seattle-transit-eink .boarding { margin-top: 5px; font-size: 12px; color: var(--muted-ink); }
+    #seattle-transit-eink .fremont-options { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    #seattle-transit-eink .fremont-times { display: flex; gap: 14px; white-space: nowrap; font-size: 12px; }
+    #seattle-transit-eink .fremont-times strong { font-weight: 500; }
+    #seattle-transit-eink .preview-note { max-width: 720px; margin: 10px auto 0; display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+    #seattle-transit-eink .accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    @media (max-width: 500px) {
+      #seattle-transit-eink .display { padding: 18px 15px 15px; }
+      #seattle-transit-eink .eyebrow { letter-spacing: .07em; }
+      #seattle-transit-eink .route-heading { gap: 10px; }
+      #seattle-transit-eink .route-number { width: 42px; height: 47px; font-size: 26px; border-radius: 6px; }
+      #seattle-transit-eink .destination { font-size: 21px; }
+      #seattle-transit-eink .via { font-size: 12px; }
+    #seattle-transit-eink .minutes { font-size: 49px; }
+      #seattle-transit-eink .unit { font-size: 13px; margin-left: 2px; }
+      #seattle-transit-eink .other-routes { grid-template-columns: 1fr; gap: 13px; }
+      #seattle-transit-eink .fremont-times { gap: 10px; }
+    }
+  
+#seattle-transit-eink .vehicle-profile{display:flex;align-items:center;gap:9px;margin-top:10px;font-size:12px;color:var(--muted-ink);flex-wrap:wrap}
+#seattle-transit-eink .vehicle-profile svg{width:64px;height:25px;flex-shrink:0}
+#seattle-transit-eink [data-vehicle-basis]{margin-left:auto;font-size:11px}
+#seattle-transit-eink .attribution{font-size:11px;color:var(--muted-ink);margin-top:6px}
+/* A stable hierarchy for a glance from across the room. */
+#seattle-transit-eink .display{--roof:light-dark(#f6f6f6,#3a3a3a);--wall:light-dark(#eeeeee,#303030);--wall-shade:light-dark(#dddddd,#222222);--building-line:light-dark(#888888,#999999)}
+#seattle-transit-eink .vehicle-profile{gap:8px;margin-top:8px;font-size:12px;min-height:22px}
+#seattle-transit-eink .vehicle-profile svg{width:51px;height:22px}
+#seattle-transit-eink .departure{margin-top:14px;padding:11px 0;min-height:52px}
+#seattle-transit-eink .departure-main{font-size:20px;letter-spacing:-.025em}
+#seattle-transit-eink .departure[data-state="go"] .departure-main{padding:3px 9px}
+#seattle-transit-eink .source-note{font-size:11px;color:var(--muted-ink);margin:11px 0 4px}
+#seattle-transit-eink .feed-note{margin-top:9px;gap:5px 10px;font-size:11px}
+#seattle-transit-eink .attribution{padding-top:7px;margin-top:8px;border-top:1px solid var(--rule)}
+@media(max-width:420px){#seattle-transit-eink .departure-main{font-size:19px}#seattle-transit-eink .departure-context{font-size:11px}#seattle-transit-eink .display{padding:18px 12px 14px}}
+
+#seattle-transit-eink .feed-note .source-note{margin:0}
+
+#seattle-transit-eink .other-routes:has([data-extra-routes][hidden]){grid-template-columns:1fr}

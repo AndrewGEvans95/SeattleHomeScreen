@@ -1,0 +1,65 @@
+
+    #seattle-weather-eink { --paper: light-dark(#ffffff, #111111); --ink: light-dark(#111111, #eeeeee); --muted-ink: light-dark(#444444, #cccccc); --rule: light-dark(#bbbbbb, #777777); --dot: light-dark(#999999, #888888); --road: light-dark(#bbbbbb, #666666); --water-edge: light-dark(#aaaaaa, #777777); --track: light-dark(#eeeeee, #333333); --rain: light-dark(#555555, #bbbbbb); width: 100%; }
+    #seattle-weather-eink * { box-sizing: border-box; }
+    #seattle-weather-eink .preview-controls { max-width: 720px; margin: 0 auto 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; align-items: end; }
+    #seattle-weather-eink .field-label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted-ink); }
+    #seattle-weather-eink .clock-note { font-size: 12px; color: var(--muted-ink); }
+    #seattle-weather-eink .departure-range { width: 100%; min-height: 28px; accent-color: var(--ink); }
+    #seattle-weather-eink .departure-control { grid-column: 1 / -1; }
+    #seattle-weather-eink .ride-settings { grid-column: 1 / -1; font-size: 12px; color: var(--muted-ink); }
+    #seattle-weather-eink .ride-settings summary { padding: 8px 0; }
+    #seattle-weather-eink .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-top: 8px; }
+    #seattle-weather-eink .settings-grid input { width: 100%; min-width: 0; font: inherit; padding: 9px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); color: var(--ink); min-height: 44px; }
+    #seattle-weather-eink .settings-help { font-size: 12px; margin: 8px 0; }
+    #seattle-weather-eink .departure-label { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: baseline; margin-bottom: 4px; gap: 6px 12px; }
+    #seattle-weather-eink .preview-stage { padding: 16px 0; }
+    #seattle-weather-eink .display { background: var(--paper); color: var(--ink); font-family: "Helvetica Neue", Arial, sans-serif; max-width: 720px; margin: 0 auto; padding: 25px 26px 18px; border: 1px solid var(--rule); border-radius: 3px; }
+    #seattle-weather-eink .eyebrow { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; font-weight: 500; letter-spacing: .09em; }
+    #seattle-weather-eink .demo { color: var(--muted-ink); }
+    #seattle-weather-eink .headline { font-size: 36px; line-height: 1.15; font-weight: 400; letter-spacing: -.045em; margin-top: 17px; }
+    #seattle-weather-eink .decision-label { font-size: 12px; letter-spacing: .065em; margin-top: 20px; color: var(--muted-ink); }
+    #seattle-weather-eink .decision-label:not([hidden]) + .headline { margin-top: 5px; }
+    #seattle-weather-eink .reason { font-size: 14px; line-height: 1.5; margin-top: 7px; color: var(--muted-ink); }
+    #seattle-weather-eink .journey-meta { margin-top: 17px; border-top: 1px solid var(--rule); padding-top: 10px; display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted-ink); font-variant-numeric: tabular-nums; }
+    #seattle-weather-eink .journey-meta strong { color: var(--ink); font-weight: 500; }
+    #seattle-weather-eink .forecast-context { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; font-size: 11px; letter-spacing: .035em; margin-top: 12px; color: var(--muted-ink); }
+    #seattle-weather-eink .weather-map { display: block; width: 100%; overflow: hidden; margin-top: 5px; }
+    #seattle-weather-eink .weather-map text { font-family: "Helvetica Neue", Arial, sans-serif; fill: var(--ink); }
+    #seattle-weather-eink .point-name { font-size: 13px; font-weight: 500; letter-spacing: .025em; }
+    #seattle-weather-eink .point-time { font-size: 12px; font-weight: 400; fill: var(--muted-ink) !important; }
+    #seattle-weather-eink .point-condition { font-size: 27px; font-weight: 400; letter-spacing: -.035em; }
+    #seattle-weather-eink .point-wind { font-size: 12px; font-weight: 400; fill: var(--muted-ink) !important; }
+    #seattle-weather-eink .place-label { font-size: 12px; font-weight: 400; fill: var(--muted-ink) !important; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+    #seattle-weather-eink .rain-heading { border-top: 1px solid var(--rule); padding-top: 13px; display: flex; justify-content: space-between; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
+    #seattle-weather-eink .section-label { font-size: 12px; font-weight: 500; letter-spacing: .07em; }
+    #seattle-weather-eink .rain-key { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; color: var(--muted-ink); font-size: 12px; }
+    #seattle-weather-eink .rain-key span { display: inline-flex; align-items: center; gap: 5px; }
+    #seattle-weather-eink .key-ride { background: var(--ink); width: 17px; height: 2px; display: inline-block; position: relative; }
+    #seattle-weather-eink .key-ride::after { content: ''; position: absolute; left: 6px; top: -2px; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+    #seattle-weather-eink .key-now { background: radial-gradient(circle at 2px 2px, var(--ink) 1.3px, transparent 1.5px) 0 0 / 6px 4px repeat-x; width: 22px; height: 4px; display: inline-block; }
+    #seattle-weather-eink [hidden] { display: none !important; }
+    #seattle-weather-eink .key-rain { background: repeating-linear-gradient(120deg, var(--rain) 0, var(--rain) 1.3px, transparent 1.3px, transparent 5px); width: 14px; height: 11px; display: inline-block; }
+    #seattle-weather-eink .key-drizzle { background: repeating-linear-gradient(120deg, var(--rain) 0, var(--rain) 1.2px, transparent 1.2px, transparent 9px); width: 14px; height: 11px; display: inline-block; }
+    #seattle-weather-eink .rain-timeline { display: block; width: 100%; margin-top: 9px; }
+    #seattle-weather-eink .rain-timeline text { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 12px; fill: var(--muted-ink); }
+    #seattle-weather-eink .rain-timeline .passage-time { fill: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+    #seattle-weather-eink .timing-note { display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted-ink); margin: 0 0 15px; }
+    #seattle-weather-eink .alternative { display: flex; justify-content: space-between; gap: 12px; align-items: center; border-top: 1px solid var(--rule); padding-top: 13px; margin-top: 2px; }
+    #seattle-weather-eink .source-note { font: 400 11px/1.5 "Helvetica Neue", Arial, sans-serif; color: var(--muted-ink); margin: 15px 0 0; }
+    #seattle-weather-eink .bus { display: flex; align-items: center; gap: 10px; }
+    #seattle-weather-eink .route-number { font-size: 20px; font-weight: 500; }
+    #seattle-weather-eink .bus-name { font-size: 12px; }
+    #seattle-weather-eink .bus-note { margin-top: 3px; font-size: 12px; color: var(--muted-ink); }
+    #seattle-weather-eink .surface-note { font-size: 12px; color: var(--muted-ink); text-align: right; max-width: 140px; line-height: 1.4; }
+    #seattle-weather-eink .preview-note { max-width: 720px; margin: 9px auto 0; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px 14px; }
+    #seattle-weather-eink .accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    @media (max-width: 500px) {
+      #seattle-weather-eink .preview-controls { grid-template-columns: 1fr; }
+      #seattle-weather-eink .display { padding: 19px 15px 15px; }
+      #seattle-weather-eink .headline { font-size: 30px; }
+      #seattle-weather-eink .eyebrow { letter-spacing: .04em; }
+      #seattle-weather-eink .reason { font-size: 13px; }
+      #seattle-weather-eink .surface-note { max-width: 88px; }
+    }
+    @media (pointer: coarse) { #seattle-weather-eink .settings-grid input { font-size: 16px; } }
+  
