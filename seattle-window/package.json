@@ -7,6 +7,7 @@
   "engines": {"node": ">=22"},
   "scripts": {
     "start": "node src/server.mjs",
+    "doctor": "node src/doctor.mjs",
     "test": "node --test test/*.test.mjs",
     "install:renderer": "npm install --no-save playwright@1.62.1 && npx playwright install chromium",
     "test:browser": "node test/browser.mjs"

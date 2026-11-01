@@ -35,10 +35,12 @@ function selectView(view){
 function describe(){
   if(mode==='demo'){connection.textContent='DEMO · All arrivals and weather are simulated. Choose Live to connect the data providers.';return;}
   const t=snapshots.transit,w=snapshots.weather,v=snapshots.vehicles;
-  const gps=v?.status==='ok'?'Metro GPS connected. ':'Metro GPS unavailable. ';
-  const transit=t?.status==='unconfigured'?'Arrival predictions need your OneBusAway key in .env.':t?.status==='ok'?'Transit connected.':'Transit unavailable; predictions are hidden.';
-  const weather=w?.status==='ok'?'Weather connected: 15-minute model estimates.':'Weather unavailable; ride guidance is paused.';
-  connection.textContent=gps+transit+' '+weather;
+  const failure=(snapshot,label)=>label+' '+(snapshot?.error?.message||'Check the local server and internet connection; the app will retry automatically.');
+  const gps=v?.status==='loading'?'Connecting to Metro GPS…':v?.status==='ok'?'Metro GPS connected.':failure(v,'Metro GPS unavailable.');
+  const transit=t?.status==='loading'?'Connecting to arrivals…':t?.status==='unconfigured'?'Arrival predictions need your OneBusAway key in .env.':t?.status==='ok'?'Transit connected.':failure(t,'Transit unavailable; predictions are hidden.');
+  const weather=w?.status==='loading'?'Connecting to weather…':w?.status==='ok'?'Weather connected: 15-minute model estimates.':failure(w,'Weather unavailable; ride guidance is paused.');
+  const extra=t?.status==='ok'&&t.extraStatus==='unavailable'?failure({error:t.extraError},'Fremont stop arrivals unavailable.'):'';
+  connection.textContent=[gps,transit,weather,extra].filter(Boolean).join(' ');
 }
 async function poll(ticket){
   if(mode!=='live'||ticket!==generation)return;

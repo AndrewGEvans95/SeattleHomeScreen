@@ -30,6 +30,22 @@ Choose **Live** in the top bar. Weather and **Metro GPS positions connect withou
 
 The key stays on the server; it is never embedded in browser files or returned by the API. Do not share your `.env`.
 
+### Check live-data setup
+
+Run this from the project folder, even while the display server is stopped:
+
+```sh
+npm run doctor
+```
+
+It checks the real Metro GPS, weather and configured arrival feeds, reports whether a proxy is in use, and checks for PNG export dependencies. It prints no API keys, proxy credentials or raw provider error responses. A missing OneBusAway key or optional PNG renderer produces a warning; a failed public feed or configured arrival feed makes the command exit with status 1. An empty list of buses can be valid between services and does not fail the check. PNG dependency detection does not launch Chromium; `npm run test:browser` verifies actual rendering.
+
+The Live connection message now distinguishes loading, missing credentials, network failures, timeouts, access denial, rate limiting and invalid/stale responses. Failed requests retry automatically at the existing feed intervals. Retained data stays marked stale until a successful refresh; it is not used for arrival or ride guidance.
+
+On a network that requires an HTTP(S) proxy, use **Node.js 24.19 or newer**. `npm start` and `npm run doctor` automatically use inherited `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` settings (lowercase versions take precedence), including their existing trust configuration. Set these in the shell or service environment, rather than this app's `.env` file. Local display and image-renderer requests bypass the proxy. Node.js 22+ still works on ordinary direct connections. Proxy-only environments with an older Node version receive an upgrade message instead of silently failing every live request.
+
+Allow outbound HTTPS to `api.open-meteo.com` and `s3.amazonaws.com`. Arrival predictions additionally need `api.pugetsound.onebusaway.org` when you configure a key. A network allowlist and a valid API key are separate requirements. If the doctor reports access denied, check both the network policy and provider permissions.
+
 ### Transit behavior
 
 - Leave-by advice uses the unrounded arrival timestamp, subtracts the selected walking time plus a one-minute buffer, then rounds down. If the bus is due within the walking time, it says **Too close to count on** and shows the following arrival when available. The two-minute default walking time remains an assumption to calibrate.
@@ -121,6 +137,8 @@ The dependency-free suite tests provider timestamps, direction filtering, cancel
 
 ```text
 src/server.mjs       Local HTTP server and configuration
+src/network.mjs      Native proxy setup and localhost bypass
+src/doctor.mjs       Live-data setup diagnostics (npm run doctor)
 src/data.mjs         OneBusAway, Metro and Open-Meteo caching
 src/vehicles.mjs     Direct Metro GPS adapter and direction filtering
 public/fleet.js      Partial sourced roster and vehicle silhouettes

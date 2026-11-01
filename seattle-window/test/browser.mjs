@@ -4,7 +4,7 @@ import {chromium} from 'playwright';
 import {createServer} from '../src/server.mjs';
 import {closeRenderer} from '../src/renderer.mjs';
 const config={PORT:'8787',CHROMIUM_EXECUTABLE:process.env.CHROMIUM_EXECUTABLE};
-const server=createServer({config,feeds:{transit:async()=>({status:'unconfigured',arrivals:[]}),weather:async()=>({status:'unavailable'}),vehicles:async()=>({status:'ok',fetchedAt:Date.now(),vehicles:[{route:'62',tripId:'1_sample',vehicleId:'1_8012',type:{kind:'articulated'},location:{lat:47.6617,lon:-122.335,updatedAt:Date.now()}}]})}});
+const server=createServer({config,feeds:{transit:async()=>({status:'unconfigured',arrivals:[]}),weather:async()=>({status:'unavailable',error:{code:'timeout',message:'The provider timed out. Check connectivity and retry.'}}),vehicles:async()=>({status:'ok',fetchedAt:Date.now(),vehicles:[{route:'62',tripId:'1_sample',vehicleId:'1_8012',type:{kind:'articulated'},location:{lat:47.6617,lon:-122.335,updatedAt:Date.now()}}]})}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));config.PORT=String(server.address().port);
 const base='http://127.0.0.1:'+config.PORT;
 let browser;
@@ -41,6 +41,8 @@ try{
   await page.locator('#data-mode').selectOption('live');await page.waitForFunction(()=>document.querySelector('[data-headline]').textContent==='Waiting for weather.');
   assert.equal(await page.locator('[data-eta]').textContent(),'—');await page.waitForFunction(()=>document.querySelector('.map [data-bus-type=articulated]'));
   assert.match(await page.locator('#connection').textContent(),/Metro GPS connected/);
+  assert.match(await page.locator('#connection').textContent(),/The provider timed out/);
+  assert.match(await page.locator('#connection').textContent(),/Arrival predictions need your OneBusAway key/);
   for(const width of [360,1280]){await page.setViewportSize({width,height:1000});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
   const png=await fetch(base+'/api/frame.png?view=transit&mode=demo').then(async r=>{assert.equal(r.status,200);return Buffer.from(await r.arrayBuffer());});
   assert.equal(png.readUInt32BE(16),1404);assert.equal(png.readUInt32BE(20),1872);assert.deepEqual(errors,[]);

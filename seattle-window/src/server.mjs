@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {createFeeds} from './data.mjs';
 import {renderFrame,closeRenderer} from './renderer.mjs';
 import {readWeatherOptions} from '../public/weather-options.js';
+import {configureNetwork} from './network.mjs';
 
 export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 export async function loadConfig(){
@@ -52,6 +53,7 @@ export function createServer({config,feeds}){
   });
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+  configureNetwork();
   const config=await loadConfig();
   const places=JSON.parse(await readFile(path.join(projectRoot,'public/assets/places.json'),'utf8'));
   const server=createServer({config,feeds:createFeeds(config,places)});
