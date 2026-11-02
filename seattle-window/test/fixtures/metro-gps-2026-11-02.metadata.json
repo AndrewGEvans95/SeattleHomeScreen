@@ -1,0 +1,10 @@
+{
+  "source": "https://s3.amazonaws.com/kcm-alerts-realtime-prod/vehiclepositions_enhanced.json",
+  "normalizer": "src/vehicles.mjs at 0e8bd117418ea73b55196aa8ad117cee850d7291",
+  "recordedStartUTC": "2026-11-02T00:21:39.989Z",
+  "recordedEndUTC": "2026-11-02T00:42:00.564Z",
+  "snapshots": 40,
+  "observations": 435,
+  "sha256Uncompressed": "6b441278489367ca5d11f532521a08c2d1f36f206321f25d1a8565593d73c1c5",
+  "description": "Normalized public Metro GPS snapshots at roughly 30-second intervals. No arrival labels or accuracy results are included. Replay with the compatible official GTFS index and each snapshot fetchedAt as the estimator clock. Do not feed historical samples into the live collector."
+}
