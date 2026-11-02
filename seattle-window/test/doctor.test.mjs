@@ -45,3 +45,9 @@ test('unexpected feed errors do not stop other checks or print raw exception tex
   assert.equal(report.checks.find(c=>c.id==='weather').status,'ok');
   assert(!formatReport(report).includes('secret-api-key'));
 });
+test('doctor identifies experimental GPS estimates without claiming calibrated accuracy',async()=>{
+  const report=await diagnose({feeds:feeds({transit:async()=>({status:'ok',source:'gps_estimate',arrivals:[],estimator:{status:'warming_up',message:'Learning bus movement.'}})}),network:{mode:'direct'}});
+  assert.equal(report.ok,true);
+  assert.equal(report.checks.find(c=>c.id==='transit').status,'warning');
+  assert.match(formatReport(report),/experimental/);assert.match(formatReport(report),/Keep npm start running/);
+});

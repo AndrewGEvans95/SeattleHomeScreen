@@ -13,7 +13,7 @@ export async function loadConfig(){
   try{for(const line of (await readFile(path.join(projectRoot,'.env'),'utf8')).split(/\r?\n/)){
     const m=line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);if(m&&!line.trim().startsWith('#'))config[m[1]]=m[2].replace(/^(['"])(.*)\1$/,'$2');
   }}catch(e){if(e.code!=='ENOENT')throw e;}
-  for(const key of [...Object.keys(config),'CHROMIUM_EXECUTABLE'])if(process.env[key]!==undefined)config[key]=process.env[key];
+  for(const key of [...Object.keys(config),'CHROMIUM_EXECUTABLE','GTFS_INDEX','ESTIMATOR_STATE_PATH'])if(process.env[key]!==undefined)config[key]=process.env[key];
   if(!/^\d+$/.test(config.PORT)||+config.PORT<1||+config.PORT>65535)throw new Error('Invalid PORT');
   return config;
 }
@@ -31,6 +31,8 @@ export function createServer({config,feeds}){
       const u=new URL(req.url,'http://localhost');
       if(u.pathname==='/api/health')return json(200,{ok:true,transitConfigured:!!config.OBA_API_KEY});
       if(u.pathname==='/api/transit')return json(200,await feeds.transit());
+      if(u.pathname==='/api/gps-estimates')return json(200,await feeds.gpsEstimates());
+      if(u.pathname==='/api/estimator')return json(200,await feeds.estimator());
       if(u.pathname==='/api/vehicles')return json(200,await feeds.vehicles());
       if(u.pathname==='/api/weather')return json(200,await feeds.weather());
       if(u.pathname==='/api/frame.png'){
@@ -56,8 +58,12 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
   configureNetwork();
   const config=await loadConfig();
   const places=JSON.parse(await readFile(path.join(projectRoot,'public/assets/places.json'),'utf8'));
-  const server=createServer({config,feeds:createFeeds(config,places)});
+  const feeds=createFeeds(config,places);
+  const server=createServer({config,feeds});
   server.on('error',e=>{console.error(e.code==='EADDRINUSE'?'Port already in use; change PORT in .env.':`Server error: ${e.code}`);process.exitCode=1;});
-  server.listen(+config.PORT,config.HOST,()=>console.log(`Seattle Window: http://localhost:${config.PORT}\nTransit: ${config.OBA_API_KEY?'key configured':'awaiting OneBusAway key'}\nOpen the page and choose Live to connect providers.`));
-  for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{server.close();closeRenderer().finally(()=>process.exit(0));});
+  server.listen(+config.PORT,config.HOST,()=>{
+    feeds.start();
+    console.log(`Seattle Window: http://localhost:${config.PORT}\nTransit: ${config.OBA_API_KEY?'OneBusAway key configured':'GPS estimates (experimental)'}\nOpen the page and choose Live to connect providers.`);
+  });
+  for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{server.close();Promise.allSettled([feeds.close(),closeRenderer()]).finally(()=>process.exit(0));});
 }

@@ -23,10 +23,11 @@
     #seattle-transit-eink .route-number { display: grid; place-items: center; width: 54px; height: 56px; flex: 0 0 auto; border-radius: 8px; background: var(--ink); color: var(--paper); font-size: 31px; font-weight: 500; letter-spacing: -.06em; }
     #seattle-transit-eink .destination { font-size: 27px; font-weight: 500; letter-spacing: -.045em; }
     #seattle-transit-eink .via { margin-top: 2px; font-size: 13px; color: var(--muted-ink); }
-    #seattle-transit-eink .countdown { white-space: nowrap; text-align: right; }
+    #seattle-transit-eink .countdown { min-width: 0; white-space: nowrap; text-align: right; }
     #seattle-transit-eink .minutes { font-size: 65px; font-weight: 400; line-height: .95; letter-spacing: -.075em; font-variant-numeric: tabular-nums; }
+    #seattle-transit-eink .countdown[data-estimated="true"] .minutes { font-size: 48px; letter-spacing: -.055em; }
     #seattle-transit-eink .unit { font-size: 17px; letter-spacing: 0; margin-left: 4px; }
-    #seattle-transit-eink .following { margin-top: 6px; color: var(--muted-ink); font-size: 12px; }
+    #seattle-transit-eink .following { margin-top: 6px; color: var(--muted-ink); font-size: 12px; white-space: normal; }
     #seattle-transit-eink .departure { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px 14px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-top: 18px; padding: 10px 0; }
     #seattle-transit-eink .departure-main { font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
     #seattle-transit-eink .departure-context { font-size: 12px; color: var(--muted-ink); }
@@ -62,6 +63,7 @@
       #seattle-transit-eink .destination { font-size: 21px; }
       #seattle-transit-eink .via { font-size: 12px; }
     #seattle-transit-eink .minutes { font-size: 49px; }
+      #seattle-transit-eink .countdown[data-estimated="true"] .minutes { font-size: 33px; }
       #seattle-transit-eink .unit { font-size: 13px; margin-left: 2px; }
       #seattle-transit-eink .other-routes { grid-template-columns: 1fr; gap: 13px; }
       #seattle-transit-eink .fremont-times { gap: 10px; }

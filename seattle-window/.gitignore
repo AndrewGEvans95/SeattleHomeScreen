@@ -1,5 +1,6 @@
 .env
 node_modules/
 var/
+/data/metro-gtfs.json
 *.log
 .DS_Store

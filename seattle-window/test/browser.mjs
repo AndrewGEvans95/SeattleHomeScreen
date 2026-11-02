@@ -4,7 +4,8 @@ import {chromium} from 'playwright';
 import {createServer} from '../src/server.mjs';
 import {closeRenderer} from '../src/renderer.mjs';
 const config={PORT:'8787',CHROMIUM_EXECUTABLE:process.env.CHROMIUM_EXECUTABLE};
-const server=createServer({config,feeds:{transit:async()=>({status:'unconfigured',arrivals:[]}),weather:async()=>({status:'unavailable',error:{code:'timeout',message:'The provider timed out. Check connectivity and retry.'}}),vehicles:async()=>({status:'ok',fetchedAt:Date.now(),vehicles:[{route:'62',tripId:'1_sample',vehicleId:'1_8012',type:{kind:'articulated'},location:{lat:47.6617,lon:-122.335,updatedAt:Date.now()}}]})}});
+let transitSnapshot=null;
+const server=createServer({config,feeds:{transit:async()=>transitSnapshot||({status:'unconfigured',arrivals:[]}),weather:async()=>({status:'unavailable',error:{code:'timeout',message:'The provider timed out. Check connectivity and retry.'}}),vehicles:async()=>({status:'ok',fetchedAt:Date.now(),vehicles:[{route:'62',tripId:'1_sample',vehicleId:'1_8012',type:{kind:'articulated'},location:{lat:47.6617,lon:-122.335,updatedAt:Date.now()}}]})}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));config.PORT=String(server.address().port);
 const base='http://127.0.0.1:'+config.PORT;
 let browser;
@@ -45,6 +46,40 @@ try{
   assert.match(await page.locator('#connection').textContent(),/Arrival predictions need your OneBusAway key/);
   for(const width of [360,1280]){await page.setViewportSize({width,height:1000});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
   const png=await fetch(base+'/api/frame.png?view=transit&mode=demo').then(async r=>{assert.equal(r.status,200);return Buffer.from(await r.arrayBuffer());});
-  assert.equal(png.readUInt32BE(16),1404);assert.equal(png.readUInt32BE(20),1872);assert.deepEqual(errors,[]);
-  console.log('Browser controls, commute settings, deadline, persistence, export consistency, narrow layout and native PNG export passed.');
+  assert.equal(png.readUInt32BE(16),1404);assert.equal(png.readUInt32BE(20),1872);
+  const now=Date.now();
+  const estimate={route:'62',tripId:'1_sample',vehicleId:'1_8012',source:'gps_estimate',predicted:false,arrivalTime:now+13*60000,earliestArrivalTime:now+10.5*60000,latestArrivalTime:now+15.5*60000,updatedAt:now,validUntil:now+90000,location:{lat:47.6617,lon:-122.335,updatedAt:now}};
+  // A following bus adds a longer GPS range label; it must wrap at phone widths.
+  const followingEstimate={...estimate,tripId:'1_following',arrivalTime:now+20*60000,earliestArrivalTime:now+15.5*60000,latestArrivalTime:now+30.5*60000};
+  transitSnapshot={status:'ok',source:'gps_estimate',fetchedAt:now,arrivals:[estimate,followingEstimate,{...estimate,route:'44',tripId:'1_other'}],extraStatus:'not_configured',estimator:{status:'ready',message:'Ranges are based on recent bus movement.'}};
+  await page.goto(base+'/?mode=live&view=transit');await page.waitForFunction(()=>window.frameReady);
+  assert.equal(await page.locator('[data-eta]').textContent(),'10–16');
+  assert.match(await page.locator('.following').textContent(),/then 15–31 min · GPS estimate/);
+  assert.equal(await page.locator('#seattle-transit-eink [data-source-note]').textContent(),'GPS estimate · experimental');
+  assert.match(await page.locator('#connection').textContent(),/GPS arrival estimates are experimental/);
+  for(const width of [320,360,1280]){
+    await page.setViewportSize({width,height:1100});
+    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    const heading=await page.locator('.route-heading').boundingBox(),countdown=await page.locator('.countdown').boundingBox();
+    assert(heading.x+heading.width<=countdown.x+1,'GPS range must not overlap the destination');
+  }
+  const estimateFrame=await browser.newPage({viewport:{width:720,height:960}});
+  await estimateFrame.goto(base+'/?mode=live&view=transit&frame=1');await estimateFrame.waitForFunction(()=>window.frameReady);
+  assert.equal(await estimateFrame.locator('[data-eta]').textContent(),'10–16');
+  const liveFooter=await estimateFrame.locator('#seattle-transit-eink .attribution').boundingBox();assert(liveFooter.y+liveFooter.height<=960);
+  await estimateFrame.close();
+  const livePNG=await fetch(base+'/api/frame.png?view=transit&mode=live').then(async r=>{assert.equal(r.status,200);return Buffer.from(await r.arrayBuffer());});
+  assert.equal(livePNG.readUInt32BE(16),1404);assert.equal(livePNG.readUInt32BE(20),1872);
+  // No 30-second poll occurs here: expiry must clear the UI by itself.
+  const expiryNow=Date.now();transitSnapshot={...transitSnapshot,fetchedAt:expiryNow,arrivals:[{...estimate,updatedAt:expiryNow,validUntil:expiryNow+2500}]};
+  await page.reload();await page.waitForFunction(()=>window.frameReady);
+  assert.notEqual(await page.locator('[data-eta]').textContent(),'—');
+  await page.waitForFunction(()=>document.querySelector('[data-eta]').textContent==='—',{},{timeout:5000});
+  assert.match(await page.locator('#connection').textContent(),/Waiting for a fresh GPS estimate/);
+  transitSnapshot={...transitSnapshot,arrivals:[],estimator:{status:'warming_up',message:'Collecting fresh observations.'}};
+  await page.reload();await page.waitForFunction(()=>window.frameReady);
+  assert.equal(await page.locator('[data-leave]').textContent(),'Learning bus movement');
+  assert.match(await page.locator('#connection').textContent(),/Collecting fresh observations/);
+  assert.deepEqual(errors,[]);
+  console.log('Browser controls, commute settings, deadline, persistence, GPS ranges and expiry, narrow layout and native PNG export passed.');
 }finally{await browser?.close();await closeRenderer();await new Promise(r=>server.close(r));}

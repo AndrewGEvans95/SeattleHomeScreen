@@ -22,7 +22,7 @@ The initial **Demo** mode works without provider credentials or internet after l
 
 ## Turn on live data
 
-Choose **Live** in the top bar. Weather and **Metro GPS positions connect without an API key**. Stop arrival predictions still use a personal Puget Sound OneBusAway key. Without that key, the map shows reported vehicle locations and leaves arrival countdowns unavailable.
+Choose **Live** in the top bar. Weather and **Metro GPS positions connect without an API key**. Without a OneBusAway key, the app can estimate arrivals from GPS movement and an exact local Metro route/timetable index (setup below). These estimates are explicitly experimental and appear as ranges. Adding a OneBusAway key switches the main arrival display to that provider's predictions; independent GPS collection and evaluation continue.
 
 1. Request a key by emailing **oba_api_key@soundtransit.org**. Explain that you are building a personal Seattle bus-arrival display. [Sound Transit instructions](https://www.soundtransit.org/help-contacts/business-information/open-transit-data-otd/otd-downloads).
 2. Edit the local `.env` file and set `OBA_API_KEY=your-key`.
@@ -38,13 +38,52 @@ Run this from the project folder, even while the display server is stopped:
 npm run doctor
 ```
 
-It checks the real Metro GPS, weather and configured arrival feeds, reports whether a proxy is in use, and checks for PNG export dependencies. It prints no API keys, proxy credentials or raw provider error responses. A missing OneBusAway key or optional PNG renderer produces a warning; a failed public feed or configured arrival feed makes the command exit with status 1. An empty list of buses can be valid between services and does not fail the check. PNG dependency detection does not launch Chromium; `npm run test:browser` verifies actual rendering.
+It checks the real Metro GPS, weather and configured arrival feeds, reports whether a proxy is in use, and checks for PNG export dependencies. It prints no API keys, proxy credentials or raw provider error responses. Experimental GPS estimates or an optional missing PNG renderer produce warnings; missing/expired timetable data or failed feeds make the command exit with status 1. An empty list of buses can be valid between services and does not fail the check. A one-shot doctor run cannot establish movement history: keep `npm start` running for that. PNG dependency detection does not launch Chromium; `npm run test:browser` verifies actual rendering.
 
 The Live connection message now distinguishes loading, missing credentials, network failures, timeouts, access denial, rate limiting and invalid/stale responses. Failed requests retry automatically at the existing feed intervals. Retained data stays marked stale until a successful refresh; it is not used for arrival or ride guidance.
 
 On a network that requires an HTTP(S) proxy, use **Node.js 24.19 or newer**. `npm start` and `npm run doctor` automatically use inherited `HTTP_PROXY`, `HTTPS_PROXY` and `NO_PROXY` settings (lowercase versions take precedence), including their existing trust configuration. Set these in the shell or service environment, rather than this app's `.env` file. Local display and image-renderer requests bypass the proxy. Node.js 22+ still works on ordinary direct connections. Proxy-only environments with an older Node version receive an upgrade message instead of silently failing every live request.
 
-Allow outbound HTTPS to `api.open-meteo.com` and `s3.amazonaws.com`. Arrival predictions additionally need `api.pugetsound.onebusaway.org` when you configure a key. A network allowlist and a valid API key are separate requirements. If the doctor reports access denied, check both the network policy and provider permissions.
+Allow outbound HTTPS to `api.open-meteo.com` and `s3.amazonaws.com`. Updating the timetable additionally needs `metro.kingcounty.gov`; OneBusAway predictions need `api.pugetsound.onebusaway.org` when you configure a key. A network allowlist and a valid API key are separate requirements. If the doctor reports access denied, check both the network policy and provider permissions.
+
+### Experimental GPS arrival estimates
+
+First install the exact Metro trip shapes, stops and timetable. This import step requires **Python 3.9+**, using only its standard library; running the app afterward still only requires Node.js.
+
+```sh
+npm run update:gtfs
+npm start
+```
+
+If the download is blocked, download the [official Metro GTFS ZIP](https://metro.kingcounty.gov/GTFS/google_transit.zip) on a permitted network, then run `npm run update:gtfs -- /absolute/path/to/google_transit.zip`. The importer creates `data/metro-gtfs.json` and keeps its source checksum and service dates. It validates the new index before replacing the previous one. Repeat the import after service changes and restart the server. Missing, expired or mismatched data produces no estimate; the illustrative display-map geometry is never substituted for the exact trip shape.
+
+The estimator currently supports boarding at the configured home stop on Downtown-bound 62 and Ballard-bound 44. Routes 31/32 remain GPS markers only unless OneBusAway is configured for their separate stop. Its method is:
+
+- Match the reported trip, service date, direction and current stop sequence to the exact GTFS pattern. Project GPS onto that pattern within the appropriate stop interval, rejecting ambiguous, off-route or implausible motion and buses already past the boarding stop.
+- Wait for at least three distinct observations spanning 40 seconds. Repeated polling of an unchanged GPS report adds no evidence. Compute remaining scheduled travel from the observed position, then adjust nearby travel using the bus's recent pace. The correction decays farther along the route. Completed observed stop-to-stop passages gradually supply bounded, time-of-day and weekday/weekend travel profiles.
+- Anchor arrival timestamps to the GPS observation time, not the time the server fetched it. Expire estimates after at most 90 seconds and withdraw them for extended holds or insufficient movement. A stopped or missing bus does not quietly become a confident countdown.
+- Display an outward-rounded arrival range labeled **GPS estimate · experimental**. These are engineering ranges, not calibrated probabilities or guaranteed bounds. **Aim to leave** guidance uses the unrounded early bound, walking time and buffer. Vehicle markers continue to show observed positions.
+
+The server samples GPS every 30 seconds even with no browser open and shares that work with browser/export requests. It saves bounded learned profiles and completed evaluations in ignored `var/eta-learning.json`. Active bus estimates reset on restart and must warm up again. Data from a different timetable checksum or boarding stop is not reused. A storage failure keeps learning in memory and is reported by diagnostics.
+
+Inspect **http://localhost:8787/api/estimator** for sample counts, median/P90 timing errors, signed bias, interval containment and schedule/progress-speed baselines, separated by route and forecast horizon. The outcomes are later GPS stop-crossing brackets of at most 60 seconds, **not measured door-opening times**. Immutable forecasts are scored only after a subsequent crossing; one forecast per trip/horizon prevents repeated polls from inflating the sample count. A known arrival whose first observation gap is too long stays unscorable; later stopped reports cannot manufacture a shorter arrival bracket. No measured accuracy is claimed before those outcomes exist. Check route-specific errors, range containment and how often the estimator abstains before relying on it for a commute.
+
+With the server running, `npm run compare:eta` compares its current estimates with Metro's separately published, key-free trip updates. It matches exact trip/date/vehicle identity and reports **provider disagreement**, not actual error: Metro's prediction is also an estimate. This comparison does not feed Metro predictions into our GPS calculation. The independent estimates remain available at `/api/gps-estimates` after you add an OBA key.
+
+#### Replay the saved live observations
+
+```sh
+npm run replay:eta
+# Save the full report (create the output directory first):
+mkdir -p var
+npm run replay:eta -- --output var/gps-replay.json
+# Explicitly check the recording against a newly imported timetable:
+npm run replay:eta -- --index data/metro-gtfs.json
+```
+
+The default replay uses the saved public GPS recording and a compressed, compatible official GTFS subset in `test/fixtures/`. It verifies the recording checksum, counts and chronological timestamps, starts with empty learning, and advances the clock to each recorded fetch. It never reads or writes the live collector's learning state. Custom recordings need matching `.metadata.json` provenance; see `npm run replay:eta -- --help`. Historical fixture data are for offline replay; the live server still requires a current `npm run update:gtfs` import.
+
+The [November 1, 2026 validation report](docs/validation/gps-arrival-2026-11-01.md) records the real-feed import, saved replay and live checks. Seven scored forecasts came from only two observed bus crossings. Median absolute timing error was **88 seconds**, versus **38 seconds** for the schedule-progress baseline; five of seven ranges contained the entire crossing bracket. This small Sunday sample does not establish commute accuracy, and the feature remains experimental.
 
 ### Transit behavior
 
@@ -54,13 +93,13 @@ Allow outbound HTTPS to `api.open-meteo.com` and `s3.amazonaws.com`. Arrival pre
 - Live frames print the last data-fetch timestamp, with the actual GPS observation time when the next bus has a position. An old frame can therefore be identified even if image updates stop.
 - Home stop defaults to **1_29530**, westbound N 45th St & Woodlawn Ave N.
 - Route **62** is filtered toward Downtown; **44** toward Ballard via Upper Fremont.
-- Arrivals and direct Metro GPS are fetched at most once every 30 seconds, with concurrent requests coalesced. GPS does not depend on a OneBusAway key. Both feeds reject observations older than two minutes.
+- Arrivals and direct Metro GPS are fetched at most once every 30 seconds, with concurrent requests coalesced. GPS does not depend on a OneBusAway key. GPS markers reject observations older than two minutes; independent arrival estimates expire after at most 90 seconds.
 - Predicted arrivals and timetable-only arrivals are visibly distinguished. Stale predictions fall back to the schedule, labeled as scheduled. Provider failures hide arrival guidance.
 - Markers use Metro’s GTFS-RT vehicle-position feed. If a matching Metro position is absent, an arrival may use OneBusAway’s recent `lastKnownLocation` for that exact active trip. A scheduled/extrapolated OBA `position` is never presented as observed GPS. Markers can legitimately be absent while an ETA is available.
 - The direct GPS filter includes Downtown-bound 62, Ballard-bound 44, and westbound 31/32 through Fremont. Route and direction IDs were verified against Metro GTFS on October 13, 2026; revalidate them after relevant service changes.
 - A known standard vehicle gets a short silhouette; an articulated vehicle gets an accordion joint. Unknown fleet numbers use compact rectangular markers, distinct from circular stop symbols. At wider scales all bus markers simplify; vehicle type stays beside the main arrival. Silhouettes face one consistent direction and convey type, not travel bearing.
 - Vehicle type is a **partial fleet-roster lookup**, not a live telemetry field. `public/fleet.js` records the source: Metro’s April 2018 Route Facilities Guidelines, Appendix B, pages AP-3–AP-5. It includes only explicitly documented ranges and uses nominal 40/60-foot classes. This is not a verified complete 2026 roster; unknown or later ranges are deliberately not guessed.
-- When no arrival prediction identifies the next bus, the GPS map does not guess which vehicle is next. No vehicle assignment is inferred solely from distance to home.
+- The next-bus marker requires either a provider arrival or a qualifying trip-specific GPS estimate. No vehicle assignment is inferred solely from geographic distance to home.
 - Routes 31/32 remain in the map geometry, and their GPS markers can appear in Live mode. Their arrival rows are hidden in Demo and remain hidden in Live unless you set `FREMONT_STOP_ID` to a **verified Fremont-bound boarding stop**. Their separate stop has not been verified in this release. Don't use the home stop as a substitute.
 - Full route/service-alert interpretation, detours and cancellation narratives are not yet implemented. The view excludes arrivals explicitly marked canceled but is not a replacement for checking service alerts.
 
@@ -139,6 +178,9 @@ The dependency-free suite tests provider timestamps, direction filtering, cancel
 src/server.mjs       Local HTTP server and configuration
 src/network.mjs      Native proxy setup and localhost bypass
 src/doctor.mjs       Live-data setup diagnostics (npm run doctor)
+src/eta-estimator.mjs Exact-trip GPS estimator, learned travel profiles and evaluation
+src/gps-service.mjs  Shared background collector and atomic learning-state storage
+src/metro-reference.mjs Independent Metro prediction comparison (not ground truth)
 src/data.mjs         OneBusAway, Metro and Open-Meteo caching
 src/vehicles.mjs     Direct Metro GPS adapter and direction filtering
 public/fleet.js      Partial sourced roster and vehicle silhouettes
@@ -150,6 +192,8 @@ public/ride-weather.js Passage windows, comfort preferences and departure planni
 public/weather-options.js Validated browser/frame settings and Seattle deadlines
 public/live-utils.js Timestamp, interval and projection helpers
 public/assets/      Local geography, bike corridor and illustration
+scripts/            Official GTFS import/update and reference comparison commands
+data/metro-gtfs.json Generated exact route/timetable index (npm run update:gtfs)
 test/               Automated checks
 ```
 

@@ -24,7 +24,8 @@ export async function diagnose({feeds,network,rendererCheck}){
     let snapshot;
     try{snapshot=await feeds[id]();snapshots[id]=snapshot;}catch{return {id,status:'error',message:labels[id]+': check failed. Run npm test and check the local configuration.'};}
     if(snapshot.status==='unconfigured')return {id,status:'warning',message:labels[id]+': add OBA_API_KEY to .env and restart to enable arrival countdowns. Weather and Metro GPS do not require this key.'};
-    if(snapshot.status!=='ok')return {id,status:'error',message:labels[id]+': '+(snapshot.error?.message||'No fresh data available. Check internet access and provider availability.')};
+    if(snapshot.status!=='ok')return {id,status:'error',message:labels[id]+': '+(snapshot.error?.message||snapshot.estimator?.message||'No fresh data available. Check internet access and provider availability.')};
+    if(id==='transit'&&snapshot.source==='gps_estimate')return {id,status:'warning',message:'GPS arrival estimates are experimental. '+(snapshot.estimator?.message||'Collecting bus movement; measured accuracy is not yet established.')+' Keep npm start running to collect observations.'};
     const count=id==='weather'?`${snapshot.points?.length||0} forecast locations`:id==='vehicles'?`${snapshot.vehicles?.length||0} matching vehicles`:`${snapshot.arrivals?.length||0} arrivals`;
     return {id,status:'ok',message:`${labels[id]} connected (${count}).`};
   }));
@@ -32,6 +33,7 @@ export async function diagnose({feeds,network,rendererCheck}){
   // An optional Fremont stop can fail independently while the home stop works.
   const transit=snapshots.transit;
   if(transit?.status==='ok'&&transit.extraStatus==='unavailable')checks.push({id:'fremont',status:'warning',message:'Fremont stop arrivals: '+(transit.extraError?.message||'Verify FREMONT_STOP_ID and provider access.')});
+  if(transit?.estimator?.storageWarning)checks.push({id:'learning',status:'warning',message:transit.estimator.storageWarning});
   if(rendererCheck)checks.push(await rendererCheck());
   return {ok:!checks.some(check=>check.status==='error'),checks};
 }
@@ -51,7 +53,7 @@ async function main(){
   }
   try{
     const places=JSON.parse(await readFile(path.join(projectRoot,'public/assets/places.json'),'utf8'));
-    const report=await diagnose({feeds:createFeeds(config,places),network,rendererCheck:()=>checkRenderer(config)});
+    const report=await diagnose({feeds:createFeeds(config,places,{saveLearning:false}),network,rendererCheck:()=>checkRenderer(config)});
     console.log(formatReport(report));
     if(!report.ok)process.exitCode=1;
   }catch{console.error('The live-data check could not finish. Verify project assets and run npm test.');process.exitCode=1;}
