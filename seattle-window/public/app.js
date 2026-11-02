@@ -1,12 +1,13 @@
 import {mount as mountTransit} from './transit.js';
 import {mount as mountWeather} from './weather.js';
 import {readWeatherOptions,weatherQuery} from './weather-options.js';
+import {gpsEstimateRange} from './live-utils.js';
 const params=new URLSearchParams(location.search);
 let weatherOptions;
 try{const saved=params.has('frame')?{}:JSON.parse(localStorage.getItem('seattle-window-weather')||'{}');weatherOptions=readWeatherOptions(params,saved);}catch{weatherOptions=readWeatherOptions(new URLSearchParams());}
 let currentView=params.get('view')==='weather'?'weather':'transit';
 let mode=params.get('mode')==='live'?'live':'demo';
-let generation=0,pollTimer,controllers=[];
+let generation=0,pollTimer,expiryTimer,controllers=[];
 window.frameReady=false;
 const modeSelect=document.querySelector('#data-mode'),connection=document.querySelector('#connection');
 const modules={};
@@ -37,10 +38,21 @@ function describe(){
   const t=snapshots.transit,w=snapshots.weather,v=snapshots.vehicles;
   const failure=(snapshot,label)=>label+' '+(snapshot?.error?.message||'Check the local server and internet connection; the app will retry automatically.');
   const gps=v?.status==='loading'?'Connecting to Metro GPS…':v?.status==='ok'?'Metro GPS connected.':failure(v,'Metro GPS unavailable.');
-  const transit=t?.status==='loading'?'Connecting to arrivals…':t?.status==='unconfigured'?'Arrival predictions need your OneBusAway key in .env.':t?.status==='ok'?'Transit connected.':failure(t,'Transit unavailable; predictions are hidden.');
+  const gpsEstimates=t?.source==='gps_estimate';
+  const expired=gpsEstimates&&t?.status==='ok'&&t.arrivals?.length&&!t.arrivals.some(a=>gpsEstimateRange(a));
+  const estimateStatus=expired?'Waiting for a fresh GPS estimate.':t?.estimator?.message||'Waiting for enough fresh observations.';
+  const transit=t?.status==='loading'?'Connecting to arrivals…':gpsEstimates?'GPS arrival estimates are experimental. '+estimateStatus:t?.status==='unconfigured'?'Arrival predictions need your OneBusAway key in .env.':t?.status==='ok'?'Transit connected.':failure(t,'Transit unavailable; predictions are hidden.');
   const weather=w?.status==='loading'?'Connecting to weather…':w?.status==='ok'?'Weather connected: 15-minute model estimates.':failure(w,'Weather unavailable; ride guidance is paused.');
   const extra=t?.status==='ok'&&t.extraStatus==='unavailable'?failure({error:t.extraError},'Fremont stop arrivals unavailable.'):'';
   connection.textContent=[gps,transit,weather,extra].filter(Boolean).join(' ');
+}
+function scheduleExpiry(){
+  clearTimeout(expiryTimer);
+  if(mode!=='live'||params.has('frame'))return;
+  const now=Date.now(),snapshot=snapshots.transit;
+  const deadlines=(snapshot?.arrivals||[]).filter(a=>a.source==='gps_estimate').flatMap(a=>[a.validUntil,a.updatedAt+90000,a.latestArrivalTime,snapshot.fetchedAt+120000]).filter(at=>Number.isFinite(at)&&at>=now);
+  if(!deadlines.length)return;
+  expiryTimer=setTimeout(()=>{modules.transit.render();modules.weather.render();describe();scheduleExpiry();},Math.max(1,Math.min(...deadlines)-now+5));
 }
 async function poll(ticket){
   if(mode!=='live'||ticket!==generation)return;
@@ -51,12 +63,12 @@ async function poll(ticket){
     try{const r=await fetch('/api/'+name,{signal:controller.signal});if(!r.ok)throw new Error();data=await r.json();}
     catch{data={status:'unavailable',arrivals:[],fetchedAt:null};}
     finally{clearTimeout(timeout);controllers=controllers.filter(c=>c!==controller);}
-    if(mode==='live'&&ticket===generation){snapshots[name]=data;if(name==='vehicles')modules.transit.setVehicles(data);else modules[name].setLive(data);if(name==='transit')modules.weather.setTransit(data);describe();}
+    if(mode==='live'&&ticket===generation){snapshots[name]=data;if(name==='vehicles')modules.transit.setVehicles(data);else modules[name].setLive(data);if(name==='transit')modules.weather.setTransit(data);describe();scheduleExpiry();}
   }));
   if(ticket===generation){window.frameReady=true;if(!params.has('frame'))pollTimer=setTimeout(()=>poll(ticket),30000);}
 }
 async function setMode(next){
-  mode=next;modeSelect.value=mode;generation++;clearTimeout(pollTimer);controllers.forEach(c=>c.abort());controllers=[];
+  mode=next;modeSelect.value=mode;generation++;clearTimeout(pollTimer);clearTimeout(expiryTimer);controllers.forEach(c=>c.abort());controllers=[];
   document.body.classList.toggle('live',mode==='live');
   const url=new URL(location);url.searchParams.set('mode',mode);url.searchParams.set('view',currentView);history.replaceState(null,'',url);
   if(mode==='live'){

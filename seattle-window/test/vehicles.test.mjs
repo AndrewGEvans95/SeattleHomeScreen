@@ -16,3 +16,17 @@ test('Metro GPS keeps fresh target-direction vehicles and rejects stale observat
   assert.equal(out.vehicles[0].tripId,'1_trip8012');assert.equal(out.vehicles[2].type.kind,'unknown');
   assert.throws(()=>normalizeVehicles(payload,{now:now+121000}),/stale/);
 });
+test('Metro GPS preserves exact trip and stop identity for independent arrival estimates',()=>{
+  const now=Date.now();
+  const payload={header:{timestamp:now/1000},entity:[{vehicle:{
+    trip:{trip_id:'629474831',route_id:'100224',direction_id:0,start_date:'20261101',schedule_relationship:'SCHEDULED'},
+    vehicle:{id:'8229'},position:{latitude:47.6613,longitude:-122.3195},
+    timestamp:now/1000,current_stop_sequence:8,stop_id:'29480',current_status:'IN_TRANSIT_TO'
+  }}]};
+  const vehicle=normalizeVehicles(payload,{now}).vehicles[0];
+  assert.equal(vehicle.rawTripId,'629474831');assert.equal(vehicle.serviceDate,'20261101');
+  assert.equal(vehicle.routeId,'100224');assert.equal(vehicle.directionId,0);
+  assert.equal(vehicle.stopSequence,8);assert.equal(vehicle.stopId,'29480');
+  assert.equal(vehicle.currentStatus,'IN_TRANSIT_TO');
+  assert.equal(vehicle.speed,null,'Absent speed must not become a stationary observation');
+});

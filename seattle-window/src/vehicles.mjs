@@ -13,7 +13,16 @@ export function normalizeVehicles(payload,{now=Date.now()}={}){
     if(e.is_deleted||!r||t.direction_id!==r.direction||['CANCELED','DELETED',3,7].includes(t.schedule_relationship)||!/^\d{4}$/.test(id))continue;
     if(!finite(at)||at<=0||now-at>120000||at>now+60000||!finite(p?.latitude)||!finite(p?.longitude)||p.latitude<47||p.latitude>48.5||p.longitude< -123.5||p.longitude> -121.5)continue;
     if(!t.trip_id||vehicles.get(id)?.location.updatedAt>=at)continue;
-    vehicles.set(id,{route:r.route,tripId:'1_'+t.trip_id,vehicleId:'1_'+id,fleetNumber:id,headsign:r.headsign,location:{lat:p.latitude,lon:p.longitude,updatedAt:at},type:vehicleType(id)});
+    vehicles.set(id,{
+      route:r.route,tripId:'1_'+t.trip_id,rawTripId:String(t.trip_id),vehicleId:'1_'+id,fleetNumber:id,headsign:r.headsign,
+      routeId:String(t.route_id),directionId:t.direction_id,
+      serviceDate:/^\d{8}$/.test(t.start_date||'')?t.start_date:null,startTime:t.start_time||null,
+      stopSequence:Number.isInteger(v.current_stop_sequence)&&v.current_stop_sequence>0?v.current_stop_sequence:null,
+      stopId:v.stop_id==null?null:String(v.stop_id),currentStatus:v.current_status??null,
+      scheduleRelationship:t.schedule_relationship??'SCHEDULED',
+      speed:finite(p.speed)&&p.speed>=0?p.speed:null,bearing:finite(p.bearing)&&p.bearing>=0&&p.bearing<360?p.bearing:null,
+      location:{lat:p.latitude,lon:p.longitude,updatedAt:at},type:vehicleType(id)
+    });
   }
   return {vehicles:[...vehicles.values()],providerTime:stamp,source:'King County Metro',attribution:'Transit scheduling, geographic, and real-time data provided by permission of King County'};
 }

@@ -1,4 +1,8 @@
 import {normalizeVehicles,vehicleFeedURL} from './vehicles.mjs';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createGpsService,fileStateStore} from './gps-service.mjs';
 // Provider adapters deliberately separate reported locations from inferred ones.
 export const MAX_TRANSIT_AGE = 120_000;
 const feedErrors={
@@ -97,8 +101,14 @@ export async function getJSON(url){
   catch(error){throw new FeedError(['TimeoutError','AbortError'].includes(error.name)?'timeout':'invalid_response');}
 }
 
-export function createFeeds(config,places){
+export function createFeeds(config,places,{saveLearning=true}={}){
   const vehicles=new CachedFeed(async()=>normalizeVehicles(await getJSON(vehicleFeedURL)),30_000);
+  const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+  const gps=createGpsService({
+    loadVehicles:()=>vehicles.get(),stopId:config.HOME_STOP_ID||'1_29530',saveLearning,
+    loadIndex:async()=>JSON.parse(await readFile(path.resolve(root,config.GTFS_INDEX||'data/metro-gtfs.json'),'utf8')),
+    store:fileStateStore(path.resolve(root,config.ESTIMATOR_STATE_PATH||'var/eta-learning.json'))
+  });
   const transit=new CachedFeed(async()=>{
     const read=async(stopId,routes)=>{
       const url=new URL('https://api.pugetsound.onebusaway.org/api/where/arrivals-and-departures-for-stop/'+encodeURIComponent(stopId)+'.json');
@@ -116,7 +126,11 @@ export function createFeeds(config,places){
     return normalizeWeather(await getJSON(url),places);
   },600_000,{retry:60_000});
   return {
-    transit:()=>config.OBA_API_KEY?transit.get():Promise.resolve({status:'unconfigured',arrivals:[],fetchedAt:null,extraStatus:'not_configured',message:'Add OBA_API_KEY to .env and restart.'}),
+    transit:()=>config.OBA_API_KEY?transit.get():gps.get(),
+    gpsEstimates:()=>gps.get(),
+    estimator:()=>gps.diagnostics(),
+    start:()=>gps.start(),
+    close:()=>gps.stop(),
     vehicles:()=>vehicles.get(),
     weather:()=>weather.get()
   };

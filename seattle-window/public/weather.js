@@ -1,4 +1,4 @@
-import {etaMinutes,arrivalsFor,weatherAt,displayTime} from './live-utils.js';
+import {arrivalsFor,weatherAt,displayTime,arrivalLabel} from './live-utils.js';
 import {assessRide,planRide,rainClass} from './ride-weather.js';
 import {normalizeWeatherOptions,arrivalOffset} from './weather-options.js';
 export async function mount(root,{initialOptions={},onChange=()=>{}}={}) {
@@ -226,7 +226,7 @@ export async function mount(root,{initialOptions={},onChange=()=>{}}={}) {
         const node=root.querySelector('[data-bus-note]');
         if(!liveSnapshot){node.textContent='Next from home · 12 min · example';return;}
         const arrivals=arrivalsFor(transitSnapshot,'62'),first=arrivals[0];
-        node.textContent=first?'Next from home · '+(etaMinutes(first)===0?'due now':etaMinutes(first)+' min')+(first.predicted?' · predicted':' · scheduled'):'Arrivals unavailable';
+        node.textContent=first?'Next from home · '+arrivalLabel(first)+(first.source==='gps_estimate'?' · GPS estimate · experimental':first.predicted?' · predicted':' · scheduled'):'Arrivals unavailable';
       }
       function update(){
         places[1].offset=settings.homeMinutes;places[2].offset=settings.homeMinutes+settings.sluMinutes;

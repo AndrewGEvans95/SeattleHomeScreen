@@ -1,5 +1,5 @@
 import {vehicleType,busSilhouette} from './fleet.js';
-import {etaMinutes,arrivalsFor,worldPoint,departureAdvice,displayTime} from './live-utils.js';
+import {etaMinutes,arrivalsFor,worldPoint,departureAdvice,displayTime,gpsEstimateRange,arrivalLabel} from './live-utils.js';
 export async function mount(root) {
       const scene=root.querySelector('.map');
       const data=await fetch('/assets/geography.json').then(r=>r.json());
@@ -388,10 +388,13 @@ export async function mount(root) {
           const a=arrivalsFor(liveSnapshot,'62'),first=a[0],eta=etaMinutes(first);
           stale=liveSnapshot.status!=='ok'||!liveSnapshot.fetchedAt||Date.now()-liveSnapshot.fetchedAt>120000;
           const put=(key,value)=>root.querySelector('[data-'+key+']').textContent=value;
-          put('eta',first?(eta===0?'Due':String(eta)):'—');put('eta-unit',first&&eta>0?'min':'');
-          put('following',a[1]?'then '+etaMinutes(a[1])+' min'+(a[1].predicted?'':' · scheduled'):first?'No following arrival listed':'Arrival unavailable');
+          const range=gpsEstimateRange(first);
+          root.querySelector('.countdown').setAttribute('data-estimated',String(!!range));
+          put('eta',range?range.label:first?(eta===0?'Due':String(eta)):'—');put('eta-unit',range||first&&eta>0?'min':'');
+          put('following',a[1]?'then '+(a[1].source==='gps_estimate'?arrivalLabel(a[1])+' · GPS estimate':etaMinutes(a[1])+' min'+(a[1].predicted?'':' · scheduled')):first?'No following arrival listed':'Arrival unavailable');
           let advice;
-          if(liveSnapshot.status==='unconfigured'||stale)advice={headline:'Arrivals unavailable',context:freshVehicles().length?'Bus positions are still updating':'Waiting for a fresh prediction',state:'stale'};
+          if(liveSnapshot.status==='unconfigured'||stale)advice={headline:'Arrivals unavailable',context:liveSnapshot.source==='gps_estimate'?(liveSnapshot.estimator?.message||'Waiting for fresh GPS estimates'):freshVehicles().length?'Bus positions are still updating':'Waiting for a fresh prediction',state:'stale'};
+          else if(!first&&liveSnapshot.source==='gps_estimate')advice={headline:liveSnapshot.estimator?.status==='warming_up'?'Learning bus movement':'No reliable GPS estimate',context:liveSnapshot.estimator?.message||'Waiting for enough fresh observations',state:'stale'};
           else if(!first)advice={headline:'No upcoming 62 listed',context:'Check service alerts before leaving',state:'stale'};
           else advice=departureAdvice(first,{walkMinutes:allowance,bufferMinutes:buffer,following:a[1]});
           const {headline,context,state}=advice;
@@ -399,12 +402,18 @@ export async function mount(root) {
           root.querySelector('[data-departure]').setAttribute('data-state',state);
           const stamp=liveSnapshot.fetchedAt||gpsSnapshot?.fetchedAt;
           put('feed',stamp?'Updated '+displayTime(stamp,{date:true}):'No recent update');
-          put('source-note',first?.predicted?'LIVE · arrival prediction':first?'SCHEDULED · no live prediction':freshVehicles().length?'LIVE LOCATIONS · arrival times unavailable':'LIVE DATA UNAVAILABLE');
-          for(const n of ['44','31','32']){const v=arrivalsFor(liveSnapshot,n)[0];put('eta'+n,v?etaMinutes(v)+(v.predicted?'':' sched.'):'—');}
+          put('source-note',range?'GPS estimate · experimental':first?.predicted?'LIVE · arrival prediction':first?'SCHEDULED · no live prediction':liveSnapshot.source==='gps_estimate'?'GPS estimates · experimental · waiting for reliable data':freshVehicles().length?'LIVE LOCATIONS · arrival times unavailable':'LIVE DATA UNAVAILABLE');
+          for(const n of ['44','31','32']){
+            const v=arrivalsFor(liveSnapshot,n)[0],r=gpsEstimateRange(v);
+            put('eta'+n,r?r.label+(n==='44'?'':' GPS est.'):v?etaMinutes(v)+(v.predicted?'':' sched.'):'—');
+            if(n==='44')root.querySelector('.secondary-unit').textContent=r?'min · GPS est.':'min';
+          }
           root.querySelector('[data-extra-routes]').hidden=liveSnapshot.extraStatus!=='ok';
-          put('announcement',headline+'. '+context);return;
+          put('announcement',(range?'GPS estimate '+range.label+' minutes. Experimental. ':'')+headline+'. '+context);return;
         }
         root.querySelector('[data-source-note]').textContent='DEMO · simulated arrivals & vehicles';
+        root.querySelector('.countdown').setAttribute('data-estimated','false');
+        root.querySelector('.secondary-unit').textContent='min';
         root.querySelector('[data-extra-routes]').hidden=true;
         const eta=currentEta(),next=elapsed<=12?25-elapsed:38-elapsed;
         root.querySelector('[data-eta]').textContent=stale?'—':eta===0?'Due':String(eta);
