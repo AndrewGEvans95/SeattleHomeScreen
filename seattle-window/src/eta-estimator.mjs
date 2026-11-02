@@ -1,8 +1,9 @@
 // Experimental, trip-specific GPS estimates. No I/O: the feed owner supplies
 // observations and persists only bounded profiles and completed evaluations.
-const MODEL_VERSION=1;
+const MODEL_VERSION=2;
 const MAX_AGE=90_000,MAX_TRACK_GAP=90_000,MAX_SPEED=25;
 const MAX_PROFILES=600,MAX_PROFILE_SAMPLES=32,MAX_OUTCOMES=600;
+const MAX_FORECASTS=4096,FORECAST_IDLE_AGE=10*60000;
 const HISTORY_AGE=28*86400_000;
 const finite=Number.isFinite;
 const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
@@ -99,6 +100,8 @@ export class GpsEstimator {
   constructor({index,stopId='1_29530',now=Date.now,state=null}={}){
     this.index=index;this.stopId=rawStop(stopId);this.now=now;
     this.tracks=new Map();this.prepared=new Map();this.profiles=new Map();this.outcomes=[];
+    this.forecastLedger=new Map();this.forecastCapacitySkippedAttempts=0;
+    this.completedTrips=new Map();this.arrivalTrackingBlockedDates=new Set();
     this.indexValid=index?.schemaVersion===1&&typeof index.source?.sha256==='string'&&!!index.stops?.[this.stopId]&&!!index.trips&&!!index.shapes;
     this.hasOvernight=this.indexValid&&Object.values(index.trips).some(trip=>trip.stops?.at(-1)?.arrival>=86400);
     if(this.indexValid&&state?.modelVersion===MODEL_VERSION&&state.indexHash===index.source.sha256&&state.stopId===this.stopId){
@@ -127,7 +130,12 @@ export class GpsEstimator {
   }
 
   metrics(){
-    const result={evaluation:'GPS stop-crossing brackets, not door-opening times',experimental:true,...summary(this.outcomes),byHorizon:{},byRoute:{},learnedSegments:this.profiles.size};
+    const sessionForecasts={scope:'Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes',issued:this.forecastLedger.size,pending:0,scored:0,censored:0,censoredByReason:{},capacitySkippedAttempts:this.forecastCapacitySkippedAttempts,arrivalTrackingBlockedDates:[...this.arrivalTrackingBlockedDates]};
+    for(const forecast of this.forecastLedger.values()){
+      sessionForecasts[forecast.status]++;
+      if(forecast.status==='censored')sessionForecasts.censoredByReason[forecast.censorReason]=(sessionForecasts.censoredByReason[forecast.censorReason]||0)+1;
+    }
+    const result={modelVersion:MODEL_VERSION,evaluation:'GPS stop-crossing brackets, not door-opening times',experimental:true,...summary(this.outcomes),sessionForecasts,byHorizon:{},byRoute:{},learnedSegments:this.profiles.size};
     for(const name of ['0–2 min','2–5 min','5–10 min','10+ min'])result.byHorizon[name]=summary(this.outcomes.filter(o=>o.horizon===name));
     for(const route of ['62','44']){
       const outcomes=this.outcomes.filter(o=>o.route===route);
@@ -146,6 +154,30 @@ export class GpsEstimator {
     }
     while(this.profiles.size>MAX_PROFILES)this.profiles.delete(this.profiles.keys().next().value);
     this.outcomes=this.outcomes.filter(item=>now-item.at<=HISTORY_AGE).slice(-MAX_OUTCOMES);
+    const oldestService=dateNumber(dateParts(now).date)-86400_000;
+    for(const [key,forecast] of this.forecastLedger){
+      if(forecast.status==='pending'&&now-forecast.lastSeenAt>FORECAST_IDLE_AGE){forecast.status='censored';forecast.censorReason='observation_gap';}
+      // Keep first-forecast tombstones while this service date can still be
+      // accepted. Evicting a current trip would let a reset rewrite its forecast.
+      if(dateNumber(forecast.serviceDate)<oldestService)this.forecastLedger.delete(key);
+    }
+    for(const [key,serviceDate] of this.completedTrips)if(dateNumber(serviceDate)<oldestService)this.completedTrips.delete(key);
+    for(const serviceDate of this.arrivalTrackingBlockedDates)if(dateNumber(serviceDate)<oldestService)this.arrivalTrackingBlockedDates.delete(serviceDate);
+  }
+
+  censorForecasts(tripInstance,reason){
+    for(const forecast of this.forecastLedger.values())if(forecast.tripInstance===tripInstance&&forecast.status==='pending'){
+      forecast.status='censored';forecast.censorReason=reason;
+    }
+  }
+
+  markTripCompleted(tripInstance){
+    if(this.completedTrips.has(tripInstance))return;
+    const serviceDate=tripInstance.split('|')[0];
+    if(this.completedTrips.size<MAX_FORECASTS)this.completedTrips.set(tripInstance,serviceDate);
+    // If capacity is exhausted, abstain for that service date rather than
+    // forgetting an arrived trip and allowing it to reappear after a reset.
+    else this.arrivalTrackingBlockedDates.add(serviceDate);
   }
 
   observe(snapshot){
@@ -185,6 +217,8 @@ export class GpsEstimator {
     const currentStop=trip.stops[stopIndex];
     if(v.stopId&&rawStop(v.stopId)!==currentStop.id)return fail('stop_mismatch');
     const key=[serviceDate,id,v.startTime||'',v.vehicleId].join('|');
+    if(this.arrivalTrackingBlockedDates.has(serviceDate))return fail('arrival_tracking_capacity');
+    if(this.completedTrips.has(key)&&sequence<=trip.target.sequence)return fail('already_arrived');
     // A vehicle changing trips cannot borrow the old trip's movement history.
     for(const [otherKey,other] of this.tracks)if(other.vehicleId===v.vehicleId&&otherKey!==key)this.tracks.delete(otherKey);
     let track=this.tracks.get(key);
@@ -192,6 +226,7 @@ export class GpsEstimator {
     if(matched.reason){this.tracks.delete(key);return fail(matched.reason);}
     const point={at,s:matched.s,lat:loc.lat,lon:loc.lon,sequence,status,scheduled:scheduleAt(trip,matched.s,status,sequence)};
     if(track&&at<track.lastAt)return fail('out_of_order');
+    for(const forecast of this.forecastLedger.values())if(forecast.tripInstance===key)forecast.lastSeenAt=now;
     if(track&&at===track.lastAt){
       const prior=track.points.at(-1);
       if(point.lat!==prior.lat||point.lon!==prior.lon||point.sequence!==prior.sequence||point.status!==prior.status){
@@ -209,7 +244,7 @@ export class GpsEstimator {
       else {point.s=Math.max(point.s,previous.s);point.scheduled=Math.max(previous.scheduled,scheduleAt(trip,point.s,status,sequence));}
     }
     if(!track){
-      track={vehicleId:v.vehicleId,points:[],lastAt:at,prediction:null,pending:new Map(),crossings:new Map(),completed:false,reason:'warming_up'};
+      track={vehicleId:v.vehicleId,points:[],lastAt:at,prediction:null,crossings:new Map(),completed:this.completedTrips.has(key),reason:'warming_up'};
       this.tracks.set(key,track);
     }
     track.lastAt=at;
@@ -252,9 +287,13 @@ export class GpsEstimator {
     if(arrivalTime<=now||latestArrivalTime<=now){track.reason='observation_too_old_for_eta';return fail(track.reason);}
     const arrival={source:'gps_estimate',predicted:false,confidence:'experimental',route:String(trip.route),tripId:v.tripId||'1_'+id,rawTripId:id,routeId:trip.routeId,directionId:trip.directionId,serviceDate,vehicleId:v.vehicleId,headsign:trip.headsign,stopId:'1_'+this.stopId,arrivalTime,earliestArrivalTime,latestArrivalTime,updatedAt:at,validUntil:at+MAX_AGE,location:{...loc},method:'gtfs-progress-with-observed-pace',observationCount:track.points.length};
     const speed=(point.s-first.s)/((at-first.at)/1000);
-    // One immutable forecast per trip/horizon prevents repeated polling from
-    // dominating evaluation. These are scored only on a later observed crossing.
-    if(!track.pending.has(bucket))track.pending.set(bucket,{bucket,issuedAt:now,observedAt:at,arrivalTime,earliestArrivalTime,latestArrivalTime,scheduleArrivalTime:at+scheduleRemaining*1000,speedArrivalTime:speed>0?at+distance/speed*1000:null});
+    // Evaluation belongs to the trip instance, not its disposable movement
+    // track. Resets must not replace an already-issued forecast with a later one.
+    const forecastKey=key+'|'+bucket;
+    if(!this.forecastLedger.has(forecastKey)&&!this.outcomes.some(outcome=>outcome.key===forecastKey)){
+      if(this.forecastLedger.size<MAX_FORECASTS)this.forecastLedger.set(forecastKey,{key:forecastKey,tripInstance:key,serviceDate,route:String(trip.route),bucket,issuedAt:now,observedAt:at,arrivalTime,earliestArrivalTime,latestArrivalTime,scheduleArrivalTime:at+scheduleRemaining*1000,speedArrivalTime:speed>0?at+distance/speed*1000:null,status:'pending',censorReason:null,lastSeenAt:now});
+      else this.forecastCapacitySkippedAttempts++;
+    }
     track.prediction=arrival;track.reason=null;
     return {arrival};
   }
@@ -271,7 +310,7 @@ export class GpsEstimator {
         // Arrival/passage is already known, but its timing cannot be bounded
         // tightly. A later dwell sample must not fabricate a new arrival time.
         track.crossings.set(stop.sequence,null);
-        if(stop.sequence===trip.target.sequence){track.completed=true;track.pending.clear();}
+        if(stop.sequence===trip.target.sequence){track.completed=true;this.markTripCompleted(key);this.censorForecasts(key,'crossing_unscorable');}
         continue;
       }
       const f=stopped?1:clamp((stop.distance-previous.s)/(current.s-previous.s||1),0,1);
@@ -290,14 +329,15 @@ export class GpsEstimator {
         }
       }
       if(stop.sequence!==trip.target.sequence)continue;
-      track.completed=true;
+      track.completed=true;this.markTripCompleted(key);
       const midpoint=(observed.low+observed.high)/2;
-      for(const forecast of track.pending.values()){
-        const outcomeKey=key+'|'+forecast.bucket;
-        if(forecast.issuedAt>previous.at||forecast.observedAt>=current.at||this.outcomes.some(outcome=>outcome.key===outcomeKey))continue;
-        this.outcomes.push({key:outcomeKey,route:String(trip.route),horizon:forecast.bucket,at:current.at,errorSeconds:(forecast.arrivalTime-midpoint)/1000,scheduleErrorSeconds:(forecast.scheduleArrivalTime-midpoint)/1000,speedErrorSeconds:finite(forecast.speedArrivalTime)?(forecast.speedArrivalTime-midpoint)/1000:null,bracketSeconds:gap/1000,bracketContained:forecast.earliestArrivalTime<=observed.low&&forecast.latestArrivalTime>=observed.high});
+      for(const forecast of this.forecastLedger.values()){
+        if(forecast.tripInstance!==key||forecast.status!=='pending')continue;
+        if(forecast.issuedAt>previous.at||forecast.observedAt>=current.at){forecast.status='censored';forecast.censorReason='issued_after_crossing_bracket';continue;}
+        if(this.outcomes.some(outcome=>outcome.key===forecast.key)){forecast.status='scored';continue;}
+        this.outcomes.push({key:forecast.key,route:String(trip.route),horizon:forecast.bucket,at:current.at,issuedAt:forecast.issuedAt,observedAt:forecast.observedAt,arrivalTime:forecast.arrivalTime,earliestArrivalTime:forecast.earliestArrivalTime,latestArrivalTime:forecast.latestArrivalTime,scheduleArrivalTime:forecast.scheduleArrivalTime,speedArrivalTime:forecast.speedArrivalTime,crossingLow:observed.low,crossingHigh:observed.high,errorSeconds:(forecast.arrivalTime-midpoint)/1000,scheduleErrorSeconds:(forecast.scheduleArrivalTime-midpoint)/1000,speedErrorSeconds:finite(forecast.speedArrivalTime)?(forecast.speedArrivalTime-midpoint)/1000:null,bracketSeconds:gap/1000,bracketContained:forecast.earliestArrivalTime<=observed.low&&forecast.latestArrivalTime>=observed.high});
+        forecast.status='scored';
       }
-      track.pending.clear();
     }
     this.prune(now);
   }

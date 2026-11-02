@@ -51,7 +51,7 @@ test('replay uses recorded clocks from cold state and scores only subsequent cro
   assert.equal(result.recording.uniqueTripInstances,1);
   assert.equal(result.coverage.uniqueTripInstancesWithEstimates,1);
   assert.equal(result.coverage.snapshotsWithEstimates,5);
-  assert.equal(result.forecasts.issuedAttempts,result.forecasts.issuedBuckets);
+  assert.equal(result.method.evaluationVersion,2);
   assert.equal(result.metrics.samples,result.forecasts.scoredBuckets);
   assert.equal(result.metrics.byRoute['62'].samples,result.forecasts.scoredBuckets);
   assert.equal(result.forecasts.issuedBuckets,result.forecasts.scoredBuckets+result.forecasts.unscoredBuckets);
@@ -82,6 +82,23 @@ test('different start times on one trip and vehicle retain separate qualified tr
   assert.equal(result.forecasts.distinctScoredTripInstances,2);
 });
 
+test('replay audits the original forecast after movement tracking resets',()=>{
+  const {index,snapshots}=fixture();
+  const first=replayRecording({index,snapshots:snapshots.slice(0,3)}).forecasts.buckets[0];
+  assert(first);
+  snapshots[3].vehicles[0].location.lat+=.02;
+  const report=replayRecording({index,snapshots});
+  const forecast=report.forecasts.buckets.find(item=>item.key===first.key);
+  const outcome=report.outcomes.find(item=>item.key===first.key);
+  assert.equal(report.coverage.excluded.off_route,1);
+  assert.equal(forecast.firstIssuedAt,first.firstIssuedAt);
+  assert.equal(forecast.arrivalTime,first.arrivalTime);
+  assert.equal(outcome.issuedAt,first.issuedAt);
+  assert.equal(outcome.arrivalTime,first.arrivalTime);
+  assert(outcome.issuedAt<=outcome.crossingLow);
+  assert.equal(outcome.errorSeconds,(first.arrivalTime-(outcome.crossingLow+outcome.crossingHigh)/2)/1000);
+});
+
 test('frozen Metro feed replays the saved recording with explicit unscored and reset coverage',async()=>{
   const [indexBytes,recordingBytes,metadataBytes]=await Promise.all([
     readFile(new URL('fixtures/metro-gtfs-2026-11-02.json.gz',import.meta.url)),
@@ -97,8 +114,6 @@ test('frozen Metro feed replays the saved recording with explicit unscored and r
   assert.equal(report.coverage.uniqueTripInstancesWithEstimates,5);
   assert.equal(report.coverage.snapshotsWithEstimates,38);
   assert.equal(report.forecasts.issuedBuckets,12);
-  assert.equal(report.forecasts.issuedAttempts,13);
-  assert.equal(report.forecasts.reissuesAfterTrackReset,1);
   assert.equal(report.forecasts.scoredBuckets,7);
   assert.equal(report.forecasts.distinctScoredTripInstances,2);
   assert.equal(report.forecasts.unscoredBuckets,5);

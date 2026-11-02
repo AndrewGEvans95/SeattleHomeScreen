@@ -1,0 +1,756 @@
+{
+  "schemaVersion": 2,
+  "method": {
+    "evaluationVersion": 2,
+    "clock": "Each snapshot fetchedAt, in recorded order",
+    "initialState": "Cold start; no persisted learning loaded or saved",
+    "evaluation": "Later GPS stop-crossing brackets of at most 60 seconds, not measured door-opening times",
+    "forecastUnit": "First immutable forecast per service-date/trip/start-time/vehicle/horizon; movement resets cannot replace it",
+    "limitations": [
+      "Repeated snapshots and horizon forecasts from the same bus are correlated, not independent accuracy samples.",
+      "A short recording cannot establish commute reliability; unscored forecasts are not counted as successful predictions.",
+      "GPS crossing proxies and forecasts use the same position source. No independent observed-arrival ground truth is available."
+    ]
+  },
+  "provenance": {
+    "recording": {
+      "file": "metro-gps-2026-11-02.ndjson.gz",
+      "sha256Uncompressed": "6b441278489367ca5d11f532521a08c2d1f36f206321f25d1a8565593d73c1c5",
+      "source": "https://s3.amazonaws.com/kcm-alerts-realtime-prod/vehiclepositions_enhanced.json",
+      "normalizer": "src/vehicles.mjs at 0e8bd117418ea73b55196aa8ad117cee850d7291",
+      "metadataVerified": true
+    },
+    "gtfsIndex": {
+      "file": "metro-gtfs-2026-11-02.json.gz",
+      "sha256": "23be6065c434188b6b74d671f1fc48923317f52396838c9fd415e17b9129d440",
+      "sha256Uncompressed": "1120a1d038e96da6d2fc8efdcba96256de0a840cd335161fcfea96e68cbcc192"
+    },
+    "gtfsSource": {
+      "url": "https://metro.kingcounty.gov/GTFS/google_transit.zip",
+      "sha256": "ff9b26cf8dc49558b526ad804dc1e41b67007fe84914c60bb3a9779c2e5fa163",
+      "importedAt": "2026-11-02T00:57:47.175760Z",
+      "feedStartDate": "20261029",
+      "feedEndDate": "20270326"
+    },
+    "stopId": "29530"
+  },
+  "recording": {
+    "startUTC": "2026-11-02T00:21:39.989Z",
+    "endUTC": "2026-11-02T00:42:00.564Z",
+    "durationSeconds": 1220.575,
+    "snapshots": 40,
+    "observations": 435,
+    "observationsByRoute": {
+      "31": 80,
+      "32": 64,
+      "44": 86,
+      "62": 205
+    },
+    "uniqueTripInstances": 15,
+    "knownHomeServingTripInstances": 10,
+    "knownHomeServingObservations": 291
+  },
+  "coverage": {
+    "snapshotsWithEstimates": 38,
+    "snapshotsWithoutEstimates": 2,
+    "qualifyingSnapshotFraction": 0.95,
+    "arrivalReports": 110,
+    "arrivalReportsByRoute": {
+      "44": 42,
+      "62": 68
+    },
+    "uniqueTripInstancesWithEstimates": 5,
+    "statuses": {
+      "warming_up": 2,
+      "ready": 38
+    },
+    "excluded": {
+      "unknown_or_unserved_trip": 144,
+      "already_arrived": 126,
+      "warming_up": 15,
+      "insufficient_motion": 4,
+      "held_or_stationary": 31,
+      "off_route": 2,
+      "conflicting_observation": 2,
+      "observation_too_old_for_eta": 1
+    }
+  },
+  "forecasts": {
+    "issuedBuckets": 12,
+    "scoredBuckets": 7,
+    "unscoredBuckets": 5,
+    "pendingAtRecordingEnd": 5,
+    "withoutScorableCrossing": 0,
+    "censorReasons": {},
+    "distinctScoredTripInstances": 2,
+    "buckets": [
+      {
+        "key": "20261101|629474841||1_8294|5–10 min",
+        "tripInstance": "20261101|629474841||1_8294",
+        "serviceDate": "20261101",
+        "route": "44",
+        "bucket": "5–10 min",
+        "issuedAt": 1793578962986,
+        "observedAt": 1793578918000,
+        "arrivalTime": 1793579448990.805,
+        "earliestArrivalTime": 1793579236032.738,
+        "latestArrivalTime": 1793579661948.8716,
+        "scheduleArrivalTime": 1793579500631.431,
+        "speedArrivalTime": 1793579359065.4683,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "5–10 min",
+        "firstIssuedAt": 1793578962986
+      },
+      {
+        "key": "20261101|840009061||1_8037|10+ min",
+        "tripInstance": "20261101|840009061||1_8037",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "10+ min",
+        "issuedAt": 1793578962986,
+        "observedAt": 1793578919000,
+        "arrivalTime": 1793579728443.0532,
+        "earliestArrivalTime": 1793579404327.7883,
+        "latestArrivalTime": 1793580052558.318,
+        "scheduleArrivalTime": 1793579797907.4443,
+        "speedArrivalTime": 1793579343458.79,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "10+ min",
+        "firstIssuedAt": 1793578962986
+      },
+      {
+        "key": "20261101|840009071||1_8065|10+ min",
+        "tripInstance": "20261101|840009071||1_8065",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "10+ min",
+        "issuedAt": 1793578962986,
+        "observedAt": 1793578911000,
+        "arrivalTime": 1793580504838.7551,
+        "earliestArrivalTime": 1793579867003.7913,
+        "latestArrivalTime": 1793581142673.719,
+        "scheduleArrivalTime": 1793580533950.5645,
+        "speedArrivalTime": 1793579876351.4548,
+        "status": "pending_at_recording_end",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "10+ min",
+        "firstIssuedAt": 1793578962986
+      },
+      {
+        "key": "20261101|840009061||1_8037|5–10 min",
+        "tripInstance": "20261101|840009061||1_8037",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "5–10 min",
+        "issuedAt": 1793579432814,
+        "observedAt": 1793579383000,
+        "arrivalTime": 1793579904645.0261,
+        "earliestArrivalTime": 1793579675875.5312,
+        "latestArrivalTime": 1793580133414.5212,
+        "scheduleArrivalTime": 1793579913604.3682,
+        "speedArrivalTime": 1793579990128.425,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "5–10 min",
+        "firstIssuedAt": 1793579432814
+      },
+      {
+        "key": "20261101|629474841||1_8294|2–5 min",
+        "tripInstance": "20261101|629474841||1_8294",
+        "serviceDate": "20261101",
+        "route": "44",
+        "bucket": "2–5 min",
+        "issuedAt": 1793579464196,
+        "observedAt": 1793579424000,
+        "arrivalTime": 1793579697330.2183,
+        "earliestArrivalTime": 1793579574955.1816,
+        "latestArrivalTime": 1793579819705.2546,
+        "scheduleArrivalTime": 1793579676448.1252,
+        "speedArrivalTime": 1793579855321.564,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "2–5 min",
+        "firstIssuedAt": 1793579464196
+      },
+      {
+        "key": "20261101|840009061||1_8037|2–5 min",
+        "tripInstance": "20261101|840009061||1_8037",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "2–5 min",
+        "issuedAt": 1793579526799,
+        "observedAt": 1793579479000,
+        "arrivalTime": 1793579800243.9531,
+        "earliestArrivalTime": 1793579665214.2083,
+        "latestArrivalTime": 1793579935273.6978,
+        "scheduleArrivalTime": 1793579854327.569,
+        "speedArrivalTime": 1793579816738.2166,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "2–5 min",
+        "firstIssuedAt": 1793579526799
+      },
+      {
+        "key": "20261101|629474841||1_8294|0–2 min",
+        "tripInstance": "20261101|629474841||1_8294",
+        "serviceDate": "20261101",
+        "route": "44",
+        "bucket": "0–2 min",
+        "issuedAt": 1793579557977,
+        "observedAt": 1793579507000,
+        "arrivalTime": 1793579621649.771,
+        "earliestArrivalTime": 1793579560233.6504,
+        "latestArrivalTime": 1793579683065.8916,
+        "scheduleArrivalTime": 1793579639918.7832,
+        "speedArrivalTime": 1793579656370.3372,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "0–2 min",
+        "firstIssuedAt": 1793579557977
+      },
+      {
+        "key": "20261101|629474851||1_8217|10+ min",
+        "tripInstance": "20261101|629474851||1_8217",
+        "serviceDate": "20261101",
+        "route": "44",
+        "bucket": "10+ min",
+        "issuedAt": 1793579589282,
+        "observedAt": 1793579546000,
+        "arrivalTime": 1793580306026.7515,
+        "earliestArrivalTime": 1793579975671.893,
+        "latestArrivalTime": 1793580636381.6096,
+        "scheduleArrivalTime": 1793580289706.199,
+        "speedArrivalTime": 1793580550309.9143,
+        "status": "pending_at_recording_end",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "10+ min",
+        "firstIssuedAt": 1793579589282
+      },
+      {
+        "key": "20261101|629474851||1_8217|5–10 min",
+        "tripInstance": "20261101|629474851||1_8217",
+        "serviceDate": "20261101",
+        "route": "44",
+        "bucket": "5–10 min",
+        "issuedAt": 1793579651726,
+        "observedAt": 1793579600000,
+        "arrivalTime": 1793580210471.5283,
+        "earliestArrivalTime": 1793579933578.6997,
+        "latestArrivalTime": 1793580487364.3567,
+        "scheduleArrivalTime": 1793580255038.883,
+        "speedArrivalTime": 1793580206914.7122,
+        "status": "pending_at_recording_end",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "5–10 min",
+        "firstIssuedAt": 1793579651726
+      },
+      {
+        "key": "20261101|840009061||1_8037|0–2 min",
+        "tripInstance": "20261101|840009061||1_8037",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "0–2 min",
+        "issuedAt": 1793579745293,
+        "observedAt": 1793579700000,
+        "arrivalTime": 1793579804437.0396,
+        "earliestArrivalTime": 1793579743005.5078,
+        "latestArrivalTime": 1793579865868.5713,
+        "scheduleArrivalTime": 1793579812957.8296,
+        "speedArrivalTime": 1793579783215.301,
+        "status": "scored",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "0–2 min",
+        "firstIssuedAt": 1793579745293
+      },
+      {
+        "key": "20261101|840009071||1_8065|5–10 min",
+        "tripInstance": "20261101|840009071||1_8065",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "5–10 min",
+        "issuedAt": 1793580058114,
+        "observedAt": 1793580027000,
+        "arrivalTime": 1793580539007.3606,
+        "earliestArrivalTime": 1793580304032.9663,
+        "latestArrivalTime": 1793580773981.7551,
+        "scheduleArrivalTime": 1793580577336.9949,
+        "speedArrivalTime": 1793580649834.6436,
+        "status": "pending_at_recording_end",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "5–10 min",
+        "firstIssuedAt": 1793580058114
+      },
+      {
+        "key": "20261101|840009081||1_8015|10+ min",
+        "tripInstance": "20261101|840009081||1_8015",
+        "serviceDate": "20261101",
+        "route": "62",
+        "bucket": "10+ min",
+        "issuedAt": 1793580058114,
+        "observedAt": 1793580023000,
+        "arrivalTime": 1793581862786.1167,
+        "earliestArrivalTime": 1793581006242.7014,
+        "latestArrivalTime": 1793582719329.532,
+        "scheduleArrivalTime": 1793581677131.0818,
+        "speedArrivalTime": 1793589820077.2126,
+        "status": "pending_at_recording_end",
+        "censorReason": null,
+        "lastSeenAt": 1793580120564,
+        "horizon": "10+ min",
+        "firstIssuedAt": 1793580058114
+      }
+    ]
+  },
+  "metrics": {
+    "modelVersion": 2,
+    "evaluation": "GPS stop-crossing brackets, not door-opening times",
+    "experimental": true,
+    "samples": 7,
+    "medianAbsoluteErrorSeconds": 88.06296044921875,
+    "p90AbsoluteErrorSeconds": 180.03784609375,
+    "meanSignedErrorSeconds": -74.75144768415178,
+    "bracketContainedFraction": 0.7142857142857143,
+    "medianCrossingBracketSeconds": 45,
+    "scheduleBaseline": {
+      "samples": 7,
+      "medianAbsoluteErrorSeconds": 38.172430908203125,
+      "p90AbsoluteErrorSeconds": 117.70296103515628
+    },
+    "speedBaseline": {
+      "samples": 7,
+      "medianAbsoluteErrorSeconds": 109.28469897460937,
+      "p90AbsoluteErrorSeconds": 395.9772030273439
+    },
+    "sessionForecasts": {
+      "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+      "issued": 12,
+      "pending": 5,
+      "scored": 7,
+      "censored": 0,
+      "censoredByReason": {},
+      "capacitySkippedAttempts": 0,
+      "arrivalTrackingBlockedDates": []
+    },
+    "byHorizon": {
+      "0–2 min": {
+        "samples": 2,
+        "medianAbsoluteErrorSeconds": 59.7065947265625,
+        "p90AbsoluteErrorSeconds": 82.39168730468751,
+        "meanSignedErrorSeconds": -59.7065947265625,
+        "bracketContainedFraction": 0.5,
+        "medianCrossingBracketSeconds": 38.5,
+        "scheduleBaseline": {
+          "samples": 2,
+          "medianAbsoluteErrorSeconds": 46.31169360351562,
+          "p90AbsoluteErrorSeconds": 72.89607504882812
+        },
+        "speedBaseline": {
+          "samples": 2,
+          "medianAbsoluteErrorSeconds": 56.32751806640625,
+          "p90AbsoluteErrorSeconds": 98.69326279296875
+        }
+      },
+      "2–5 min": {
+        "samples": 2,
+        "medianAbsoluteErrorSeconds": 68.29313256835937,
+        "p90AbsoluteErrorSeconds": 87.46346401367188,
+        "meanSignedErrorSeconds": -23.962914306640624,
+        "bracketContainedFraction": 1,
+        "medianCrossingBracketSeconds": 38.5,
+        "scheduleBaseline": {
+          "samples": 2,
+          "medianAbsoluteErrorSeconds": 30.810278076171876,
+          "p90AbsoluteErrorSeconds": 36.70000034179688
+        },
+        "speedBaseline": {
+          "samples": 2,
+          "medianAbsoluteErrorSeconds": 139.0416737060547,
+          "p90AbsoluteErrorSeconds": 189.66558591308595
+        }
+      },
+      "5–10 min": {
+        "samples": 2,
+        "medianAbsoluteErrorSeconds": 108.07711059570312,
+        "p90AbsoluteErrorSeconds": 184.8227781738281,
+        "meanSignedErrorSeconds": -95.93208447265624,
+        "bracketContainedFraction": 0.5,
+        "medianCrossingBracketSeconds": 38.5,
+        "scheduleBaseline": {
+          "samples": 2,
+          "medianAbsoluteErrorSeconds": 86.7364686279297,
+          "p90AbsoluteErrorSeconds": 139.24214899902344
+        },
+        "speedBaseline": {
+          "samples": 2,
+          "medianAbsoluteErrorSeconds": 195.78147839355466,
+          "p90AbsoluteErrorSeconds": 274.30392106933596
+        }
+      },
+      "10+ min": {
+        "samples": 1,
+        "medianAbsoluteErrorSeconds": 164.05694677734374,
+        "p90AbsoluteErrorSeconds": 164.05694677734374,
+        "meanSignedErrorSeconds": -164.05694677734374,
+        "bracketContainedFraction": 1,
+        "medianCrossingBracketSeconds": 45,
+        "scheduleBaseline": {
+          "samples": 1,
+          "medianAbsoluteErrorSeconds": 94.5925556640625,
+          "p90AbsoluteErrorSeconds": 94.5925556640625
+        },
+        "speedBaseline": {
+          "samples": 1,
+          "medianAbsoluteErrorSeconds": 549.0412099609375,
+          "p90AbsoluteErrorSeconds": 549.0412099609375
+        }
+      }
+    },
+    "byRoute": {
+      "44": {
+        "samples": 3,
+        "medianAbsoluteErrorSeconds": 44.33021826171875,
+        "p90AbsoluteErrorSeconds": 172.07339970703123,
+        "meanSignedErrorSeconds": -63.67640193684895,
+        "bracketContainedFraction": 0.6666666666666666,
+        "medianCrossingBracketSeconds": 32,
+        "scheduleBaseline": {
+          "samples": 3,
+          "medianAbsoluteErrorSeconds": 23.448125244140623,
+          "p90AbsoluteErrorSeconds": 126.58448032226563
+        },
+        "speedBaseline": {
+          "samples": 3,
+          "medianAbsoluteErrorSeconds": 202.32156396484376,
+          "p90AbsoluteErrorSeconds": 275.61193818359374
+        },
+        "byHorizon": {
+          "0–2 min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 31.35022900390625,
+            "p90AbsoluteErrorSeconds": 31.35022900390625,
+            "meanSignedErrorSeconds": -31.35022900390625,
+            "bracketContainedFraction": 1,
+            "medianCrossingBracketSeconds": 32,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 13.081216796875,
+              "p90AbsoluteErrorSeconds": 13.081216796875
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 3.370337158203125,
+              "p90AbsoluteErrorSeconds": 3.370337158203125
+            }
+          },
+          "2–5 min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 44.33021826171875,
+            "p90AbsoluteErrorSeconds": 44.33021826171875,
+            "meanSignedErrorSeconds": 44.33021826171875,
+            "bracketContainedFraction": 1,
+            "medianCrossingBracketSeconds": 32,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 23.448125244140623,
+              "p90AbsoluteErrorSeconds": 23.448125244140623
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 202.32156396484376,
+              "p90AbsoluteErrorSeconds": 202.32156396484376
+            }
+          },
+          "5–10 min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 204.00919506835936,
+            "p90AbsoluteErrorSeconds": 204.00919506835936,
+            "meanSignedErrorSeconds": -204.00919506835936,
+            "bracketContainedFraction": 0,
+            "medianCrossingBracketSeconds": 32,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 152.36856909179687,
+              "p90AbsoluteErrorSeconds": 152.36856909179687
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 293.93453173828124,
+              "p90AbsoluteErrorSeconds": 293.93453173828124
+            }
+          },
+          "10+ min": {
+            "samples": 0,
+            "medianAbsoluteErrorSeconds": null,
+            "p90AbsoluteErrorSeconds": null,
+            "meanSignedErrorSeconds": null,
+            "bracketContainedFraction": null,
+            "medianCrossingBracketSeconds": null,
+            "scheduleBaseline": {
+              "samples": 0,
+              "medianAbsoluteErrorSeconds": null,
+              "p90AbsoluteErrorSeconds": null
+            },
+            "speedBaseline": {
+              "samples": 0,
+              "medianAbsoluteErrorSeconds": null,
+              "p90AbsoluteErrorSeconds": null
+            }
+          }
+        }
+      },
+      "62": {
+        "samples": 4,
+        "medianAbsoluteErrorSeconds": 90.15950366210937,
+        "p90AbsoluteErrorSeconds": 142.51667680664065,
+        "meanSignedErrorSeconds": -83.0577319946289,
+        "bracketContainedFraction": 0.75,
+        "medianCrossingBracketSeconds": 45,
+        "scheduleBaseline": {
+          "samples": 4,
+          "medianAbsoluteErrorSeconds": 58.857300659179685,
+          "p90AbsoluteErrorSeconds": 90.07744008789062
+        },
+        "speedBaseline": {
+          "samples": 4,
+          "medianAbsoluteErrorSeconds": 103.45656201171874,
+          "p90AbsoluteErrorSeconds": 417.1142566650392
+        },
+        "byHorizon": {
+          "0–2 min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 88.06296044921875,
+            "p90AbsoluteErrorSeconds": 88.06296044921875,
+            "meanSignedErrorSeconds": -88.06296044921875,
+            "bracketContainedFraction": 0,
+            "medianCrossingBracketSeconds": 45,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 79.54217041015625,
+              "p90AbsoluteErrorSeconds": 79.54217041015625
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 109.28469897460937,
+              "p90AbsoluteErrorSeconds": 109.28469897460937
+            }
+          },
+          "2–5 min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 92.256046875,
+            "p90AbsoluteErrorSeconds": 92.256046875,
+            "meanSignedErrorSeconds": -92.256046875,
+            "bracketContainedFraction": 1,
+            "medianCrossingBracketSeconds": 45,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 38.172430908203125,
+              "p90AbsoluteErrorSeconds": 38.172430908203125
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 75.76178344726563,
+              "p90AbsoluteErrorSeconds": 75.76178344726563
+            }
+          },
+          "5–10 min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 12.145026123046875,
+            "p90AbsoluteErrorSeconds": 12.145026123046875,
+            "meanSignedErrorSeconds": 12.145026123046875,
+            "bracketContainedFraction": 1,
+            "medianCrossingBracketSeconds": 45,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 21.1043681640625,
+              "p90AbsoluteErrorSeconds": 21.1043681640625
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 97.62842504882812,
+              "p90AbsoluteErrorSeconds": 97.62842504882812
+            }
+          },
+          "10+ min": {
+            "samples": 1,
+            "medianAbsoluteErrorSeconds": 164.05694677734374,
+            "p90AbsoluteErrorSeconds": 164.05694677734374,
+            "meanSignedErrorSeconds": -164.05694677734374,
+            "bracketContainedFraction": 1,
+            "medianCrossingBracketSeconds": 45,
+            "scheduleBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 94.5925556640625,
+              "p90AbsoluteErrorSeconds": 94.5925556640625
+            },
+            "speedBaseline": {
+              "samples": 1,
+              "medianAbsoluteErrorSeconds": 549.0412099609375,
+              "p90AbsoluteErrorSeconds": 549.0412099609375
+            }
+          }
+        }
+      }
+    },
+    "learnedSegments": 64
+  },
+  "metricsRetention": {
+    "description": "Metrics use the estimator retention window (28 days, at most 600 outcomes); outcomes lists every completed replay outcome.",
+    "retainedOutcomes": 7,
+    "allReplayOutcomes": 7
+  },
+  "outcomes": [
+    {
+      "key": "20261101|629474841||1_8294|5–10 min",
+      "route": "44",
+      "horizon": "5–10 min",
+      "at": 1793579669000,
+      "issuedAt": 1793578962986,
+      "observedAt": 1793578918000,
+      "arrivalTime": 1793579448990.805,
+      "earliestArrivalTime": 1793579236032.738,
+      "latestArrivalTime": 1793579661948.8716,
+      "scheduleArrivalTime": 1793579500631.431,
+      "speedArrivalTime": 1793579359065.4683,
+      "crossingLow": 1793579637000,
+      "crossingHigh": 1793579669000,
+      "errorSeconds": -204.00919506835936,
+      "scheduleErrorSeconds": -152.36856909179687,
+      "speedErrorSeconds": -293.93453173828124,
+      "bracketSeconds": 32,
+      "bracketContained": false
+    },
+    {
+      "key": "20261101|629474841||1_8294|2–5 min",
+      "route": "44",
+      "horizon": "2–5 min",
+      "at": 1793579669000,
+      "issuedAt": 1793579464196,
+      "observedAt": 1793579424000,
+      "arrivalTime": 1793579697330.2183,
+      "earliestArrivalTime": 1793579574955.1816,
+      "latestArrivalTime": 1793579819705.2546,
+      "scheduleArrivalTime": 1793579676448.1252,
+      "speedArrivalTime": 1793579855321.564,
+      "crossingLow": 1793579637000,
+      "crossingHigh": 1793579669000,
+      "errorSeconds": 44.33021826171875,
+      "scheduleErrorSeconds": 23.448125244140623,
+      "speedErrorSeconds": 202.32156396484376,
+      "bracketSeconds": 32,
+      "bracketContained": true
+    },
+    {
+      "key": "20261101|629474841||1_8294|0–2 min",
+      "route": "44",
+      "horizon": "0–2 min",
+      "at": 1793579669000,
+      "issuedAt": 1793579557977,
+      "observedAt": 1793579507000,
+      "arrivalTime": 1793579621649.771,
+      "earliestArrivalTime": 1793579560233.6504,
+      "latestArrivalTime": 1793579683065.8916,
+      "scheduleArrivalTime": 1793579639918.7832,
+      "speedArrivalTime": 1793579656370.3372,
+      "crossingLow": 1793579637000,
+      "crossingHigh": 1793579669000,
+      "errorSeconds": -31.35022900390625,
+      "scheduleErrorSeconds": -13.081216796875,
+      "speedErrorSeconds": 3.370337158203125,
+      "bracketSeconds": 32,
+      "bracketContained": true
+    },
+    {
+      "key": "20261101|840009061||1_8037|10+ min",
+      "route": "62",
+      "horizon": "10+ min",
+      "at": 1793579915000,
+      "issuedAt": 1793578962986,
+      "observedAt": 1793578919000,
+      "arrivalTime": 1793579728443.0532,
+      "earliestArrivalTime": 1793579404327.7883,
+      "latestArrivalTime": 1793580052558.318,
+      "scheduleArrivalTime": 1793579797907.4443,
+      "speedArrivalTime": 1793579343458.79,
+      "crossingLow": 1793579870000,
+      "crossingHigh": 1793579915000,
+      "errorSeconds": -164.05694677734374,
+      "scheduleErrorSeconds": -94.5925556640625,
+      "speedErrorSeconds": -549.0412099609375,
+      "bracketSeconds": 45,
+      "bracketContained": true
+    },
+    {
+      "key": "20261101|840009061||1_8037|5–10 min",
+      "route": "62",
+      "horizon": "5–10 min",
+      "at": 1793579915000,
+      "issuedAt": 1793579432814,
+      "observedAt": 1793579383000,
+      "arrivalTime": 1793579904645.0261,
+      "earliestArrivalTime": 1793579675875.5312,
+      "latestArrivalTime": 1793580133414.5212,
+      "scheduleArrivalTime": 1793579913604.3682,
+      "speedArrivalTime": 1793579990128.425,
+      "crossingLow": 1793579870000,
+      "crossingHigh": 1793579915000,
+      "errorSeconds": 12.145026123046875,
+      "scheduleErrorSeconds": 21.1043681640625,
+      "speedErrorSeconds": 97.62842504882812,
+      "bracketSeconds": 45,
+      "bracketContained": true
+    },
+    {
+      "key": "20261101|840009061||1_8037|2–5 min",
+      "route": "62",
+      "horizon": "2–5 min",
+      "at": 1793579915000,
+      "issuedAt": 1793579526799,
+      "observedAt": 1793579479000,
+      "arrivalTime": 1793579800243.9531,
+      "earliestArrivalTime": 1793579665214.2083,
+      "latestArrivalTime": 1793579935273.6978,
+      "scheduleArrivalTime": 1793579854327.569,
+      "speedArrivalTime": 1793579816738.2166,
+      "crossingLow": 1793579870000,
+      "crossingHigh": 1793579915000,
+      "errorSeconds": -92.256046875,
+      "scheduleErrorSeconds": -38.172430908203125,
+      "speedErrorSeconds": -75.76178344726563,
+      "bracketSeconds": 45,
+      "bracketContained": true
+    },
+    {
+      "key": "20261101|840009061||1_8037|0–2 min",
+      "route": "62",
+      "horizon": "0–2 min",
+      "at": 1793579915000,
+      "issuedAt": 1793579745293,
+      "observedAt": 1793579700000,
+      "arrivalTime": 1793579804437.0396,
+      "earliestArrivalTime": 1793579743005.5078,
+      "latestArrivalTime": 1793579865868.5713,
+      "scheduleArrivalTime": 1793579812957.8296,
+      "speedArrivalTime": 1793579783215.301,
+      "crossingLow": 1793579870000,
+      "crossingHigh": 1793579915000,
+      "errorSeconds": -88.06296044921875,
+      "scheduleErrorSeconds": -79.54217041015625,
+      "speedErrorSeconds": -109.28469897460937,
+      "bracketSeconds": 45,
+      "bracketContained": false
+    }
+  ]
+}
