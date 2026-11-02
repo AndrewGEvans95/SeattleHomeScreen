@@ -94,6 +94,8 @@ The recorder polls at most every 30 seconds, saves compressed observations and a
 
 The [November 1, 2026 validation report](docs/validation/gps-arrival-2026-11-01.md) records the real-feed import, saved replay and live checks. Seven scored forecasts came from only two observed bus crossings. Median absolute timing error was **88 seconds**, versus **38 seconds** for the schedule-progress baseline; five of seven ranges contained the entire crossing bracket. This small Sunday sample does not establish commute accuracy, and the feature remains experimental.
 
+The [evaluation version 2 follow-up](docs/validation/gps-evaluation-v2-2026-11-01.md) fixes forecast replacement and already-arrived trip revival after tracking resets. A separate 24-snapshot recording adds six scored forecasts across two more crossings: median error **60 seconds** versus **25 seconds** for the schedule-progress baseline, with five of six crossing brackets contained. Prediction parameters were not tuned to either recording.
+
 ### Transit behavior
 
 - Leave-by advice uses the unrounded arrival timestamp, subtracts the selected walking time plus a one-minute buffer, then rounds down. If the bus is due within the walking time, it says **Too close to count on** and shows the following arrival when available. The two-minute default walking time remains an assumption to calibrate.
