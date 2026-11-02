@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "kind": "live-integration-validation",
+  "recordedStartUTC": "2026-11-02T00:59:11.258Z",
+  "recordedEndUTC": "2026-11-02T01:04:29.921Z",
+  "provenance": {
+    "gtfsSource": "https://metro.kingcounty.gov/GTFS/google_transit.zip",
+    "gtfsArchiveSha256": "ff9b26cf8dc49558b526ad804dc1e41b67007fe84914c60bb3a9779c2e5fa163",
+    "feedStartDate": "20261029",
+    "feedEndDate": "20270326",
+    "vehicleSource": "https://s3.amazonaws.com/kcm-alerts-realtime-prod/vehiclepositions_enhanced.json",
+    "referenceSource": "https://s3.amazonaws.com/kcm-alerts-realtime-prod/tripupdates_enhanced.json",
+    "stopId": "1_29530",
+    "startedWithEmptyLearningState": true,
+    "historicalFixtureFedToLiveCollector": false,
+    "rawSnapshotsSha256": "ecb8636acc6f45dd5911a1d6d708abf8804af151e818cc2b6dcaaa23559b86b3",
+    "rawSnapshotsFile": "metro-live-2026-11-02.snapshots.ndjson.gz"
+  },
+  "collection": {
+    "snapshots": 11,
+    "snapshotsWithEstimates": 10,
+    "uniqueEstimatedTrips": [
+      {
+        "route": "44",
+        "tripId": "1_629474861",
+        "serviceDate": "20261101",
+        "vehicleId": "1_8211"
+      },
+      {
+        "route": "62",
+        "tripId": "1_840009081",
+        "serviceDate": "20261101",
+        "vehicleId": "1_8015"
+      },
+      {
+        "route": "62",
+        "tripId": "1_840009091",
+        "serviceDate": "20261101",
+        "vehicleId": "1_8055"
+      },
+      {
+        "route": "44",
+        "tripId": "1_629474871",
+        "serviceDate": "20261101",
+        "vehicleId": "1_8245"
+      }
+    ],
+    "routeEstimatedTrips": {
+      "44": 2,
+      "62": 2
+    },
+    "excludedObservationCounts": {
+      "unknown_or_unserved_trip": 35,
+      "already_arrived": 40,
+      "warming_up": 6,
+      "held_or_stationary": 10
+    },
+    "excludedCountNote": "Repeated vehicles across snapshots; unknown_or_unserved_trip consists of GPS-only routes 31/32 in these samples.",
+    "scoredOutcomes": 0,
+    "scoringNote": "The first 44 crossed home, but its sole forecast was issued after the crossing bracket lower bound; it was correctly left unscored. Other estimated trips had not crossed by the collection end. This live smoke provides no new arrival-accuracy measurement."
+  },
+  "referenceComparison": {
+    "label": "Provider disagreement, not measured arrival accuracy. Repeated snapshots of the same trips are correlated.",
+    "successfulComparisonSnapshots": 10,
+    "referenceErrors": [],
+    "snapshots": [
+      {
+        "at": "2026-11-02T00:59:11.258Z",
+        "status": "warming_up",
+        "ownEstimates": 0,
+        "referenceArrivals": 4,
+        "matched": 0,
+        "within60Seconds": 0,
+        "between60And120Seconds": 0,
+        "over120Seconds": 0
+      },
+      {
+        "at": "2026-11-02T00:59:43.062Z",
+        "status": "compared",
+        "ownEstimates": 3,
+        "referenceArrivals": 4,
+        "matched": 3,
+        "within60Seconds": 2,
+        "between60And120Seconds": 0,
+        "over120Seconds": 1
+      },
+      {
+        "at": "2026-11-02T01:00:14.875Z",
+        "status": "compared",
+        "ownEstimates": 2,
+        "referenceArrivals": 3,
+        "matched": 2,
+        "within60Seconds": 1,
+        "between60And120Seconds": 1,
+        "over120Seconds": 0
+      },
+      {
+        "at": "2026-11-02T01:00:46.454Z",
+        "status": "compared",
+        "ownEstimates": 2,
+        "referenceArrivals": 4,
+        "matched": 2,
+        "within60Seconds": 2,
+        "between60And120Seconds": 0,
+        "over120Seconds": 0
+      },
+      {
+        "at": "2026-11-02T01:01:18.748Z",
+        "status": "compared",
+        "ownEstimates": 2,
+        "referenceArrivals": 4,
+        "matched": 2,
+        "within60Seconds": 1,
+        "between60And120Seconds": 0,
+        "over120Seconds": 1
+      },
+      {
+        "at": "2026-11-02T01:01:50.468Z",
+        "status": "compared",
+        "ownEstimates": 2,
+        "referenceArrivals": 4,
+        "matched": 2,
+        "within60Seconds": 1,
+        "between60And120Seconds": 0,
+        "over120Seconds": 1
+      },
+      {
+        "at": "2026-11-02T01:02:22.032Z",
+        "status": "compared",
+        "ownEstimates": 3,
+        "referenceArrivals": 4,
+        "matched": 3,
+        "within60Seconds": 1,
+        "between60And120Seconds": 1,
+        "over120Seconds": 1
+      },
+      {
+        "at": "2026-11-02T01:02:54.294Z",
+        "status": "compared",
+        "ownEstimates": 3,
+        "referenceArrivals": 4,
+        "matched": 3,
+        "within60Seconds": 2,
+        "between60And120Seconds": 1,
+        "over120Seconds": 0
+      },
+      {
+        "at": "2026-11-02T01:03:26.165Z",
+        "status": "compared",
+        "ownEstimates": 3,
+        "referenceArrivals": 4,
+        "matched": 3,
+        "within60Seconds": 2,
+        "between60And120Seconds": 1,
+        "over120Seconds": 0
+      },
+      {
+        "at": "2026-11-02T01:03:57.693Z",
+        "status": "compared",
+        "ownEstimates": 3,
+        "referenceArrivals": 4,
+        "matched": 3,
+        "within60Seconds": 3,
+        "between60And120Seconds": 0,
+        "over120Seconds": 0
+      },
+      {
+        "at": "2026-11-02T01:04:29.921Z",
+        "status": "compared",
+        "ownEstimates": 2,
+        "referenceArrivals": 4,
+        "matched": 2,
+        "within60Seconds": 2,
+        "between60And120Seconds": 0,
+        "over120Seconds": 0
+      }
+    ],
+    "cli": {
+      "command": "npm run compare:eta",
+      "exitCode": 0,
+      "ownEstimates": 3,
+      "referenceArrivals": 4,
+      "matched": 3,
+      "within60Seconds": 2,
+      "between60And120Seconds": 0,
+      "over120Seconds": 1
+    }
+  },
+  "checks": {
+    "doctor": {
+      "command": "npm run doctor",
+      "exitCode": 0,
+      "metroGpsVehicles": 11,
+      "weatherLocations": 3,
+      "experimentalWarning": true,
+      "rendererWarningAtInitialRun": true,
+      "rendererConfiguredForSubsequentPng": true
+    },
+    "transitApi": {
+      "status": "ok",
+      "source": "gps_estimate",
+      "predicted": false,
+      "confidence": "experimental",
+      "boundedArrivalTimes": true
+    },
+    "browser": {
+      "checkedAt": "2026-11-02T01:03:22.239Z",
+      "errors": [],
+      "widths": [
+        {
+          "width": 320,
+          "scrollWidth": 320,
+          "eta": "1–6",
+          "following": "then 8–25 min · GPS estimate",
+          "source": "GPS estimate · experimental"
+        },
+        {
+          "width": 360,
+          "scrollWidth": 360,
+          "eta": "1–6",
+          "following": "then 8–25 min · GPS estimate",
+          "source": "GPS estimate · experimental"
+        },
+        {
+          "width": 1280,
+          "scrollWidth": 1280,
+          "eta": "1–6",
+          "following": "then 8–25 min · GPS estimate",
+          "source": "GPS estimate · experimental"
+        }
+      ]
+    },
+    "png": {
+      "requestedAt": "2026-11-02T01:04:56.376Z",
+      "status": 200,
+      "contentType": "image/png",
+      "width": 1404,
+      "height": 1872,
+      "bytes": 359675,
+      "sha256": "b3b6b540f8132b2fd8136b23e659ae6248550b0ebf4f2a12a4cb566fc5eab377",
+      "mode": "live",
+      "view": "transit",
+      "chromiumExecutable": "/usr/bin/chromium",
+      "note": "Fetched after server restart; active bus tracks warm up again, while learned profiles persist."
+    }
+  }
+}

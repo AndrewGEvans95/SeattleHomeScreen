@@ -70,6 +70,21 @@ Inspect **http://localhost:8787/api/estimator** for sample counts, median/P90 ti
 
 With the server running, `npm run compare:eta` compares its current estimates with Metro's separately published, key-free trip updates. It matches exact trip/date/vehicle identity and reports **provider disagreement**, not actual error: Metro's prediction is also an estimate. This comparison does not feed Metro predictions into our GPS calculation. The independent estimates remain available at `/api/gps-estimates` after you add an OBA key.
 
+#### Replay the saved live observations
+
+```sh
+npm run replay:eta
+# Save the full report (create the output directory first):
+mkdir -p var
+npm run replay:eta -- --output var/gps-replay.json
+# Explicitly check the recording against a newly imported timetable:
+npm run replay:eta -- --index data/metro-gtfs.json
+```
+
+The default replay uses the saved public GPS recording and a compressed, compatible official GTFS subset in `test/fixtures/`. It verifies the recording checksum, counts and chronological timestamps, starts with empty learning, and advances the clock to each recorded fetch. It never reads or writes the live collector's learning state. Custom recordings need matching `.metadata.json` provenance; see `npm run replay:eta -- --help`. Historical fixture data are for offline replay; the live server still requires a current `npm run update:gtfs` import.
+
+The [November 1, 2026 validation report](docs/validation/gps-arrival-2026-11-01.md) records the real-feed import, saved replay and live checks. Seven scored forecasts came from only two observed bus crossings. Median absolute timing error was **88 seconds**, versus **38 seconds** for the schedule-progress baseline; five of seven ranges contained the entire crossing bracket. This small Sunday sample does not establish commute accuracy, and the feature remains experimental.
+
 ### Transit behavior
 
 - Leave-by advice uses the unrounded arrival timestamp, subtracts the selected walking time plus a one-minute buffer, then rounds down. If the bus is due within the walking time, it says **Too close to count on** and shows the following arrival when available. The two-minute default walking time remains an assumption to calibrate.

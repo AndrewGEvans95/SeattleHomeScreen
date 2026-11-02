@@ -10,6 +10,7 @@
     "doctor": "node src/doctor.mjs",
     "update:gtfs": "node scripts/update-gtfs.mjs",
     "compare:eta": "node scripts/compare-eta.mjs",
+    "replay:eta": "node scripts/replay-eta.mjs",
     "test": "node --test test/*.test.mjs",
     "install:renderer": "npm install --no-save playwright@1.62.1 && npx playwright install chromium",
     "test:browser": "node test/browser.mjs"

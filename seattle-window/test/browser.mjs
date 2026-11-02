@@ -49,9 +49,12 @@ try{
   assert.equal(png.readUInt32BE(16),1404);assert.equal(png.readUInt32BE(20),1872);
   const now=Date.now();
   const estimate={route:'62',tripId:'1_sample',vehicleId:'1_8012',source:'gps_estimate',predicted:false,arrivalTime:now+13*60000,earliestArrivalTime:now+10.5*60000,latestArrivalTime:now+15.5*60000,updatedAt:now,validUntil:now+90000,location:{lat:47.6617,lon:-122.335,updatedAt:now}};
-  transitSnapshot={status:'ok',source:'gps_estimate',fetchedAt:now,arrivals:[estimate,{...estimate,route:'44',tripId:'1_other'}],extraStatus:'not_configured',estimator:{status:'ready',message:'Ranges are based on recent bus movement.'}};
+  // A following bus adds a longer GPS range label; it must wrap at phone widths.
+  const followingEstimate={...estimate,tripId:'1_following',arrivalTime:now+20*60000,earliestArrivalTime:now+15.5*60000,latestArrivalTime:now+30.5*60000};
+  transitSnapshot={status:'ok',source:'gps_estimate',fetchedAt:now,arrivals:[estimate,followingEstimate,{...estimate,route:'44',tripId:'1_other'}],extraStatus:'not_configured',estimator:{status:'ready',message:'Ranges are based on recent bus movement.'}};
   await page.goto(base+'/?mode=live&view=transit');await page.waitForFunction(()=>window.frameReady);
   assert.equal(await page.locator('[data-eta]').textContent(),'10–16');
+  assert.match(await page.locator('.following').textContent(),/then 15–31 min · GPS estimate/);
   assert.equal(await page.locator('#seattle-transit-eink [data-source-note]').textContent(),'GPS estimate · experimental');
   assert.match(await page.locator('#connection').textContent(),/GPS arrival estimates are experimental/);
   for(const width of [320,360,1280]){
