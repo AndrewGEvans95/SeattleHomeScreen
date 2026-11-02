@@ -1,5 +1,10 @@
 # GPS arrival validation — November 1, 2026
 
+This report records evaluation version 1 at commit `82c1041`. The later
+[evaluation version 2 follow-up](gps-evaluation-v2-2026-11-01.md) preserves original
+forecasts across tracking resets and adds a fresh recording. The original JSON
+report is retained as historical evidence.
+
 The official Metro feed imports successfully and the saved public GPS recording
 produces trip-specific arrival ranges. This completes the blocked real-feed
 import and replay check. It does **not** establish high accuracy: the replay has

@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "kind": "evaluation-v2-live-smoke",
+  "codeCommit": "32f612dafcfd5bccb46e2f8d8d14133aa3c23a3f",
+  "gtfsArchiveSha256": "ff9b26cf8dc49558b526ad804dc1e41b67007fe84914c60bb3a9779c2e5fa163",
+  "startedWithEmptyLearningState": true,
+  "historicalDataFedToCollector": false,
+  "source": "https://s3.amazonaws.com/kcm-alerts-realtime-prod/vehiclepositions_enhanced.json",
+  "samples": [
+    {
+      "requestedAt": "2026-11-02T01:20:33.060Z",
+      "fetchedAt": 1793582418654,
+      "status": "ok",
+      "estimatorStatus": "warming_up",
+      "modelVersion": 2,
+      "observedVehicles": 11,
+      "excluded": {
+        "unknown_or_unserved_trip": 4,
+        "already_arrived": 3,
+        "warming_up": 4
+      },
+      "arrivals": [],
+      "sessionForecasts": {
+        "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+        "issued": 0,
+        "pending": 0,
+        "scored": 0,
+        "censored": 0,
+        "censoredByReason": {},
+        "capacitySkippedAttempts": 0,
+        "arrivalTrackingBlockedDates": []
+      },
+      "diagnostics": {
+        "status": "warming_up",
+        "modelVersion": 2,
+        "sessionForecasts": {
+          "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+          "issued": 0,
+          "pending": 0,
+          "scored": 0,
+          "censored": 0,
+          "censoredByReason": {},
+          "capacitySkippedAttempts": 0,
+          "arrivalTrackingBlockedDates": []
+        }
+      }
+    },
+    {
+      "requestedAt": "2026-11-02T01:21:03.105Z",
+      "fetchedAt": 1793582450026,
+      "status": "ok",
+      "estimatorStatus": "warming_up",
+      "modelVersion": 2,
+      "observedVehicles": 11,
+      "excluded": {
+        "unknown_or_unserved_trip": 4,
+        "already_arrived": 3,
+        "warming_up": 4
+      },
+      "arrivals": [],
+      "sessionForecasts": {
+        "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+        "issued": 0,
+        "pending": 0,
+        "scored": 0,
+        "censored": 0,
+        "censoredByReason": {},
+        "capacitySkippedAttempts": 0,
+        "arrivalTrackingBlockedDates": []
+      },
+      "diagnostics": {
+        "status": "warming_up",
+        "modelVersion": 2,
+        "sessionForecasts": {
+          "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+          "issued": 0,
+          "pending": 0,
+          "scored": 0,
+          "censored": 0,
+          "censoredByReason": {},
+          "capacitySkippedAttempts": 0,
+          "arrivalTrackingBlockedDates": []
+        }
+      }
+    },
+    {
+      "requestedAt": "2026-11-02T01:21:33.114Z",
+      "fetchedAt": 1793582480852,
+      "status": "ok",
+      "estimatorStatus": "ready",
+      "modelVersion": 2,
+      "observedVehicles": 11,
+      "excluded": {
+        "unknown_or_unserved_trip": 4,
+        "already_arrived": 4,
+        "insufficient_motion": 1
+      },
+      "arrivals": [
+        {
+          "route": "44",
+          "tripId": "1_629474881",
+          "serviceDate": "20261101",
+          "vehicleId": "1_8225",
+          "updatedAt": 1793582446000,
+          "validUntil": 1793582536000,
+          "arrivalTime": 1793583225009.2698,
+          "earliestArrivalTime": 1793582886838.8804,
+          "latestArrivalTime": 1793583563179.6594,
+          "observationCount": 3
+        },
+        {
+          "route": "62",
+          "tripId": "1_840009101",
+          "serviceDate": "20261101",
+          "vehicleId": "1_8045",
+          "updatedAt": 1793582445000,
+          "validUntil": 1793582535000,
+          "arrivalTime": 1793583361372.4458,
+          "earliestArrivalTime": 1793582967154.24,
+          "latestArrivalTime": 1793583755590.6519,
+          "observationCount": 3
+        }
+      ],
+      "sessionForecasts": {
+        "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+        "issued": 2,
+        "pending": 2,
+        "scored": 0,
+        "censored": 0,
+        "censoredByReason": {},
+        "capacitySkippedAttempts": 0,
+        "arrivalTrackingBlockedDates": []
+      },
+      "diagnostics": {
+        "status": "ready",
+        "modelVersion": 2,
+        "sessionForecasts": {
+          "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+          "issued": 2,
+          "pending": 2,
+          "scored": 0,
+          "censored": 0,
+          "censoredByReason": {},
+          "capacitySkippedAttempts": 0,
+          "arrivalTrackingBlockedDates": []
+        }
+      }
+    },
+    {
+      "requestedAt": "2026-11-02T01:22:03.123Z",
+      "fetchedAt": 1793582512122,
+      "status": "ok",
+      "estimatorStatus": "ready",
+      "modelVersion": 2,
+      "observedVehicles": 11,
+      "excluded": {
+        "unknown_or_unserved_trip": 4,
+        "already_arrived": 3,
+        "held_or_stationary": 1
+      },
+      "arrivals": [
+        {
+          "route": "62",
+          "tripId": "1_840009091",
+          "serviceDate": "20261101",
+          "vehicleId": "1_8055",
+          "updatedAt": 1793582469000,
+          "validUntil": 1793582559000,
+          "arrivalTime": 1793582529621.0225,
+          "earliestArrivalTime": 1793582477136.4656,
+          "latestArrivalTime": 1793582591147.7517,
+          "observationCount": 4
+        },
+        {
+          "route": "44",
+          "tripId": "1_629474881",
+          "serviceDate": "20261101",
+          "vehicleId": "1_8225",
+          "updatedAt": 1793582477000,
+          "validUntil": 1793582567000,
+          "arrivalTime": 1793583160531.836,
+          "earliestArrivalTime": 1793582870939.9,
+          "latestArrivalTime": 1793583450123.772,
+          "observationCount": 4
+        },
+        {
+          "route": "62",
+          "tripId": "1_840009101",
+          "serviceDate": "20261101",
+          "vehicleId": "1_8045",
+          "updatedAt": 1793582475000,
+          "validUntil": 1793582565000,
+          "arrivalTime": 1793583346913.2769,
+          "earliestArrivalTime": 1793582983778.1533,
+          "latestArrivalTime": 1793583710048.4004,
+          "observationCount": 4
+        }
+      ],
+      "sessionForecasts": {
+        "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+        "issued": 3,
+        "pending": 3,
+        "scored": 0,
+        "censored": 0,
+        "censoredByReason": {},
+        "capacitySkippedAttempts": 0,
+        "arrivalTrackingBlockedDates": []
+      },
+      "diagnostics": {
+        "status": "ready",
+        "modelVersion": 2,
+        "sessionForecasts": {
+          "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+          "issued": 3,
+          "pending": 3,
+          "scored": 0,
+          "censored": 0,
+          "censoredByReason": {},
+          "capacitySkippedAttempts": 0,
+          "arrivalTrackingBlockedDates": []
+        }
+      }
+    }
+  ],
+  "png": {
+    "status": 200,
+    "contentType": "image/png",
+    "width": 1404,
+    "height": 1872,
+    "sha256": "89606dac9263a925d7bf38cc61bf4e711bce7a3eaccee5743066936e4ca4608b"
+  },
+  "shutdown": {
+    "graceful": true,
+    "savedStateModelVersion": 2,
+    "savedOutcomes": 0
+  },
+  "summary": {
+    "snapshots": 4,
+    "snapshotsWithEstimates": 2,
+    "finalSessionForecasts": {
+      "scope": "Retained forecasts issued in this process for service dates still eligible for observation; excludes saved outcomes from earlier processes",
+      "issued": 3,
+      "pending": 3,
+      "scored": 0,
+      "censored": 0,
+      "censoredByReason": {},
+      "capacitySkippedAttempts": 0,
+      "arrivalTrackingBlockedDates": []
+    },
+    "accuracyNote": "No scored outcomes during this 90-second smoke; verifies live integration and version 2 forecast accounting only."
+  }
+}

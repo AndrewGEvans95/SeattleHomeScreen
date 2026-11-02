@@ -39,7 +39,7 @@ export function replayRecording({index,snapshots,stopId='1_29530',provenance={}}
   const estimator=new GpsEstimator({index,stopId,now:()=>now});
   if(!estimator.indexValid)throw new Error('The GTFS index is invalid for this boarding stop.');
   const statuses={},excluded={},observationsByRoute={},qualifyingByRoute={};
-  const observedTrips=new Set(),knownTrips=new Set(),qualifiedTrips=new Set(),forecastBuckets=new Map(),forecastAttempts=new Set(),outcomes=new Map();
+  const observedTrips=new Set(),knownTrips=new Set(),qualifiedTrips=new Set(),forecastBuckets=new Map(),outcomes=new Map();
   let observations=0,knownObservations=0,qualifyingSnapshots=0,arrivalReports=0,previous=-Infinity;
   for(const snapshot of snapshots){
     if(!Number.isFinite(snapshot.fetchedAt)||snapshot.fetchedAt<=previous)throw new Error('Replay snapshots must have strictly increasing fetchedAt timestamps.');
@@ -57,29 +57,28 @@ export function replayRecording({index,snapshots,stopId='1_29530',provenance={}}
       const vehicle=snapshot.vehicles.find(v=>v.vehicleId===arrival.vehicleId&&v.rawTripId===arrival.rawTripId&&v.serviceDate===arrival.serviceDate);
       qualifiedTrips.add(tripKey(vehicle||arrival));arrivalReports++;increment(qualifyingByRoute,arrival.route);
     }
-    for(const [key,track] of estimator.tracks){
-      for(const [bucket,forecast] of track.pending){
-        const outcomeKey=key+'|'+bucket;
-        if(!forecastBuckets.has(outcomeKey))forecastBuckets.set(outcomeKey,{key:outcomeKey,tripInstance:key,horizon:bucket,firstIssuedAt:forecast.issuedAt});
-        forecastAttempts.add([outcomeKey,forecast.issuedAt,forecast.observedAt].join('|'));
-      }
+    for(const [key,forecast] of estimator.forecastLedger)forecastBuckets.set(key,{...forecast,key});
+    // Long replays can outlive the bounded in-memory ledger. Preserve that
+    // missing evidence as censoring, never as a successful forecast.
+    for(const [key,forecast] of forecastBuckets)if(forecast.status==='pending'&&!estimator.forecastLedger.has(key)){
+      forecast.status='censored';forecast.censorReason='retention_evicted';
     }
     // Keep every completed outcome even if a long replay exceeds the live
     // estimator's bounded retention. Metrics below explicitly describe retention.
     for(const outcome of estimator.outcomes)outcomes.set(outcome.key,{...outcome});
   }
-  const pending=new Set();
-  for(const [key,track] of estimator.tracks)for(const bucket of track.pending.keys())pending.add(key+'|'+bucket);
   const scored=[...outcomes.values()];
-  const forecastDetails=[...forecastBuckets.values()].map(forecast=>({...forecast,status:outcomes.has(forecast.key)?'scored':pending.has(forecast.key)?'pending_at_recording_end':'no_scorable_crossing'}));
+  const forecastDetails=[...forecastBuckets.values()].map(forecast=>({...forecast,horizon:forecast.bucket,firstIssuedAt:forecast.issuedAt,status:outcomes.has(forecast.key)?'scored':forecast.status==='pending'?'pending_at_recording_end':'no_scorable_crossing'}));
   const pendingAtEnd=forecastDetails.filter(f=>f.status==='pending_at_recording_end').length;
+  const censorReasons={};
+  for(const forecast of forecastDetails)if(forecast.status==='no_scorable_crossing')increment(censorReasons,forecast.censorReason||'unknown');
   return {
-    schemaVersion:1,
-    method:{clock:'Each snapshot fetchedAt, in recorded order',initialState:'Cold start; no persisted learning loaded or saved',evaluation:'Later GPS stop-crossing brackets of at most 60 seconds, not measured door-opening times',forecastUnit:'One service-date/trip/start-time/vehicle/horizon bucket; reissues after track resets are counted separately',limitations:['Repeated snapshots and horizon forecasts from the same bus are correlated, not independent accuracy samples.','A short recording cannot establish commute reliability; unscored forecasts are not counted as successful predictions.','GPS crossing proxies and forecasts use the same position source. No independent observed-arrival ground truth is available.']},
+    schemaVersion:2,
+    method:{evaluationVersion:estimator.exportState().modelVersion,clock:'Each snapshot fetchedAt, in recorded order',initialState:'Cold start; no persisted learning loaded or saved',evaluation:'Later GPS stop-crossing brackets of at most 60 seconds, not measured door-opening times',forecastUnit:'First immutable forecast per service-date/trip/start-time/vehicle/horizon; movement resets cannot replace it',limitations:['Repeated snapshots and horizon forecasts from the same bus are correlated, not independent accuracy samples.','A short recording cannot establish commute reliability; unscored forecasts are not counted as successful predictions.','GPS crossing proxies and forecasts use the same position source. No independent observed-arrival ground truth is available.']},
     provenance:{...provenance,gtfsSource:index.source,stopId:estimator.stopId},
     recording:{startUTC:new Date(snapshots[0].fetchedAt).toISOString(),endUTC:new Date(now).toISOString(),durationSeconds:(now-snapshots[0].fetchedAt)/1000,snapshots:snapshots.length,observations,observationsByRoute,uniqueTripInstances:observedTrips.size,knownHomeServingTripInstances:knownTrips.size,knownHomeServingObservations:knownObservations},
     coverage:{snapshotsWithEstimates:qualifyingSnapshots,snapshotsWithoutEstimates:snapshots.length-qualifyingSnapshots,qualifyingSnapshotFraction:qualifyingSnapshots/snapshots.length,arrivalReports,arrivalReportsByRoute:qualifyingByRoute,uniqueTripInstancesWithEstimates:qualifiedTrips.size,statuses,excluded},
-    forecasts:{issuedBuckets:forecastBuckets.size,issuedAttempts:forecastAttempts.size,reissuesAfterTrackReset:forecastAttempts.size-forecastBuckets.size,scoredBuckets:outcomes.size,unscoredBuckets:forecastBuckets.size-outcomes.size,pendingAtRecordingEnd:pendingAtEnd,withoutScorableCrossing:forecastBuckets.size-outcomes.size-pendingAtEnd,distinctScoredTripInstances:new Set(scored.map(o=>o.key.slice(0,o.key.lastIndexOf('|')))).size,buckets:forecastDetails},
+    forecasts:{issuedBuckets:forecastBuckets.size,scoredBuckets:outcomes.size,unscoredBuckets:forecastBuckets.size-outcomes.size,pendingAtRecordingEnd:pendingAtEnd,withoutScorableCrossing:forecastBuckets.size-outcomes.size-pendingAtEnd,censorReasons,distinctScoredTripInstances:new Set(scored.map(o=>o.key.slice(0,o.key.lastIndexOf('|')))).size,buckets:forecastDetails},
     metrics:estimator.metrics(),
     metricsRetention:{description:'Metrics use the estimator retention window (28 days, at most 600 outcomes); outcomes lists every completed replay outcome.',retainedOutcomes:estimator.outcomes.length,allReplayOutcomes:outcomes.size},
     outcomes:scored

@@ -180,10 +180,119 @@ test('later GPS crossing brackets score immutable forecasts and learn bounded tr
   h.observe(850,225);assert.equal(h.estimator.metrics().samples,metrics.samples,'Repeated post-arrival observations cannot rescore');
 });
 
+test('movement resets cannot replace the first forecast for a trip and horizon',()=>{
+  const index=fixture();
+  index.shapes.shape=Array.from({length:33},(_,i)=>coordinate(i*50));
+  index.trips.trip.stops=Array.from({length:9},(_,i)=>({id:i===6?'29530':String(i),sequence:i+1,arrival:28800+i*60,departure:28800+i*60,distance:i*200,pickupAllowed:true}));
+  const h=harness(index);warm(h);
+  const key='20261102|trip|08:00:00|1_8012|2–5 min';
+  const original={...h.estimator.forecastLedger.get(key)};
+  assert.equal(original.arrivalTime,START+330000);
+  const reset=h.observe(350,75,{location:{lat:LAT+.01,lon:coordinate(350)[0],updatedAt:START+75000}});
+  assert.equal(reset.estimator.excluded.off_route,1);
+  h.observe(350,90);h.observe(450,120);
+  assert.equal(h.observe(550,150).arrivals[0].arrivalTime,START+345000,'A new live estimate can legitimately differ after warmup');
+  assert.equal(h.estimator.forecastLedger.get(key).issuedAt,original.issuedAt);
+  assert.equal(h.estimator.forecastLedger.get(key).arrivalTime,original.arrivalTime);
+  for(const [s,t] of [[650,180],[750,210],[850,240],[950,270],[1050,300],[1150,330],[1210,360]])h.observe(s,t);
+  const outcome=h.estimator.outcomes.find(item=>item.key===key);
+  assert.equal(outcome.errorSeconds,-15,'Score the original forecast, not the replacement that would score zero error');
+  assert.equal(outcome.issuedAt,original.issuedAt);assert.equal(outcome.observedAt,original.observedAt);
+  assert.equal(outcome.arrivalTime,original.arrivalTime);
+  assert.equal(outcome.earliestArrivalTime,original.earliestArrivalTime);
+  assert.equal(outcome.latestArrivalTime,original.latestArrivalTime);
+  assert.equal(outcome.crossingLow,START+330000);assert.equal(outcome.crossingHigh,START+360000);
+  assert.equal(h.estimator.forecastLedger.get(key).status,'scored');
+});
+
+test('an arrival first observed after a reset permanently censors the original forecast',()=>{
+  const h=harness();warm(h);
+  const forecast=[...h.estimator.forecastLedger.values()][0],issuedAt=forecast.issuedAt;
+  h.observe(350,75,{location:{lat:LAT+.01,lon:coordinate(350)[0],updatedAt:START+75000}});
+  h.observe(785,120,{stopSequence:5,currentStatus:'STOPPED_AT'});
+  assert.equal(forecast.status,'censored');assert.equal(forecast.censorReason,'crossing_unscorable');
+  h.observe(785,150,{stopSequence:5,currentStatus:'STOPPED_AT'});
+  h.observe(810,180);
+  assert.equal(forecast.issuedAt,issuedAt);assert.equal(forecast.status,'censored');
+  assert.equal(h.estimator.metrics().samples,0);
+  assert.equal(h.estimator.metrics().sessionForecasts.censoredByReason.crossing_unscorable,1);
+});
+
+test('known arrivals cannot revive after movement resets even when no forecast preceded the crossing',()=>{
+  for(const scored of [true,false]){
+    const h=harness();
+    if(scored){warm(h);for(const [s,t] of [[400,90],[500,120],[600,150],[700,180]])h.observe(s,t);}
+    h.observe(820,210);
+    const outcomesBefore=h.estimator.metrics().samples,forecastsBefore=h.estimator.forecastLedger.size;
+    assert.equal(h.estimator.completedTrips.size,1);
+    h.observe(850,240,{location:{lat:LAT+.02,lon:coordinate(850)[0],updatedAt:START+240000}});
+    for(const [s,t] of [[100,270],[200,300],[300,330]]){
+      const result=h.observe(s,t);
+      assert.equal(result.arrivals.length,0);
+      assert.equal(result.estimator.excluded.already_arrived,1);
+    }
+    h.observe(820,360);
+    assert.equal(h.estimator.metrics().samples,outcomesBefore,'A second apparent crossing is not a new outcome');
+    assert.equal(h.estimator.forecastLedger.size,forecastsBefore,'No new horizon can be issued after a known arrival');
+  }
+});
+
+test('forecasts issued after a crossing bracket starts are explicitly censored',()=>{
+  const h=harness();warm(h,20);
+  h.observe(810,90);
+  const forecast=[...h.estimator.forecastLedger.values()][0];
+  assert.equal(forecast.status,'censored');
+  assert.equal(forecast.censorReason,'issued_after_crossing_bracket');
+  assert.equal(h.estimator.metrics().samples,0);
+  assert.equal(h.estimator.metrics().sessionForecasts.pending,0);
+});
+
+test('inactivity censors forecasts without allowing later movement to rewrite them',()=>{
+  const h=harness();warm(h);
+  const forecast=[...h.estimator.forecastLedger.values()][0],issuedAt=forecast.issuedAt;
+  h.setTime(START+661000);
+  h.estimator.observe({status:'ok',fetchedAt:h.now(),vehicles:[]});
+  assert.equal(forecast.status,'censored');assert.equal(forecast.censorReason,'observation_gap');
+  h.observe(300,670);h.observe(400,700);h.observe(500,730);
+  for(const [s,t] of [[600,760],[700,790],[810,820]])h.observe(s,t);
+  assert.equal(forecast.issuedAt,issuedAt);assert.equal(forecast.status,'censored');
+  assert(!h.estimator.outcomes.some(item=>item.key===forecast.key));
+  h.setTime(Date.parse('2026-11-03T16:00:00Z'));h.estimator.exportState();
+  assert(h.estimator.forecastLedger.has(forecast.key),'Yesterday remains an eligible overnight service date');
+  h.setTime(Date.parse('2026-11-04T16:00:00Z'));h.estimator.exportState();
+  assert(!h.estimator.forecastLedger.has(forecast.key),'Expired service identities can be released without enabling a rewrite');
+});
+
+test('forecast capacity refuses new evaluation entries instead of evicting eligible identities',()=>{
+  const h=harness();warm(h);
+  const first=[...h.estimator.forecastLedger.values()][0];
+  for(let i=1;i<4096;i++)h.estimator.forecastLedger.set('occupied-'+i,{...first,key:'occupied-'+i,tripInstance:'occupied-'+i,status:'censored',censorReason:'crossing_unscorable'});
+  h.observe(500,120);
+  assert.equal(h.estimator.forecastLedger.size,4096);
+  assert.equal(h.estimator.forecastLedger.get(first.key),first);
+  assert.equal(h.estimator.metrics().sessionForecasts.capacitySkippedAttempts,1);
+  assert.equal(first.issuedAt,START+60000);
+});
+
+test('arrival identity capacity abstains instead of forgetting a current service arrival',()=>{
+  const h=harness();
+  for(let i=0;i<4096;i++)h.estimator.completedTrips.set('occupied-'+i,'20261102');
+  h.observe(820,0);
+  assert.equal(h.estimator.completedTrips.size,4096);
+  assert.deepEqual(h.estimator.metrics().sessionForecasts.arrivalTrackingBlockedDates,['20261102']);
+  assert.equal(h.observe(100,30).estimator.excluded.arrival_tracking_capacity,1);
+  h.setTime(Date.parse('2026-11-03T16:00:00Z'));h.estimator.exportState();
+  assert(h.estimator.arrivalTrackingBlockedDates.has('20261102'),'The previous service date may still be active overnight');
+  h.setTime(Date.parse('2026-11-04T16:00:00Z'));h.estimator.exportState();
+  assert.equal(h.estimator.completedTrips.size,0);assert.equal(h.estimator.arrivalTrackingBlockedDates.size,0);
+});
+
 test('missing or long-gap arrival observations are not fabricated into evaluation outcomes',()=>{
   const h=harness();warm(h);h.observe(650,150);
   h.observe(850,220);
   assert.equal(h.estimator.metrics().samples,0,'A 70-second crossing gap is too imprecise to score');
+  assert.equal(h.estimator.metrics().sessionForecasts.pending,0);
+  assert(h.estimator.metrics().sessionForecasts.censoredByReason.crossing_unscorable>0);
 });
 
 test('an unscorable arrival cannot turn into a falsely precise crossing during later dwell',()=>{
@@ -219,6 +328,9 @@ test('persisted learning is tied to GTFS and excludes active GPS tracks and fore
   assert(!('tracks' in state));assert(!('pending' in state));
   const restart=new GpsEstimator({index:fixture(),now:()=>START+220000,state});
   assert.equal(restart.metrics().samples,state.outcomes.length);
+  assert.equal(restart.metrics().sessionForecasts.issued,0,'Session forecast coverage does not include saved outcomes');
+  assert.equal(restart.metrics().modelVersion,2);
+  assert.equal(new GpsEstimator({index:fixture(),now:()=>START+220000,state:{...state,modelVersion:1}}).metrics().samples,0,'Outcomes from reset-replaceable forecasts are not mixed with this evaluation version');
   const fresh=restart.observe({status:'ok',fetchedAt:START+220000,vehicles:[h.vehicle(300,220)]});
   assert.equal(fresh.arrivals.length,0);
   const updated=fixture();updated.source.sha256='fixture-v2';
